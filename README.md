@@ -58,6 +58,8 @@ For any app on either store, in 60-180 seconds:
 | **Markdown** | GitHub/Notion friendly summary for PRs and wikis. |
 | **JSON** | Structured data for downstream processing. |
 
+When the run finishes interactively, the executive summary **auto-opens in your default browser**. Every HTML report ends with a **Downloads** section — clickable cards for every other artifact (xlsx, csv, json, markdown), with `download` attributes that trigger Save dialogs even when `file://` browser security would block direct navigation. No more "I see the filename in chat but clicking does nothing." (Auto-open is gated on TTY mode and disable-able with `--no-open`.)
+
 ## Install
 
 See [INSTALL.md](./INSTALL.md) for all three paths. Quick version:
@@ -68,10 +70,14 @@ See [INSTALL.md](./INSTALL.md) for all three paths. Quick version:
 git clone https://github.com/ShanShafiq01/app-review-analyzer.git \
   ~/.claude/skills/app-review-analyzer
 cd ~/.claude/skills/app-review-analyzer
+```
 
-./setup.sh        # macOS / Linux
-.\setup.ps1       # Windows PowerShell
-python install.py # any OS — portable
+Then run **one** of the installers — pick the one matching your OS:
+
+```text
+./setup.sh         # macOS / Linux
+.\setup.ps1        # Windows (PowerShell)
+python install.py  # any OS — portable Python installer
 ```
 
 Then in Claude Code: `Analyze reviews for <app name on both stores>`
@@ -109,6 +115,7 @@ What testing against real apps at scale taught us. The skill is built so it does
 | **Per-format isolation** | If PDF generation fails, Excel still works |
 | **Detailed progress** | Numbered steps, real-time status, no firehose of HTTP codes |
 | **Security-audited installer** | List-form subprocess calls only, no `shell=True`, PEP 668 detection for Debian/Homebrew Pythons, pinned Playwright revision. See [SECURITY.md](./SECURITY.md). |
+| **Update notifications** | Each pipeline run checks GitHub Releases (cached 24h, 3s timeout, silent on any error) and prints a one-line `Update available: vX → vY` banner if a newer version exists. Disable with `--no-update-check`. |
 
 See `WORKFLOW.md` for a full diagram of inputs, steps, and outputs.
 
@@ -153,6 +160,8 @@ Use `--themes auto` and the skill picks one based on the app's store category.
 --byline            Optional credit line in report footers
 --llm-tagging       Use Claude for theme tagging (requires ANTHROPIC_API_KEY)
 --quiet             Suppress progress output (good for CI)
+--no-open           Don't auto-open the executive summary in a browser
+--no-update-check   Skip the GitHub Releases version check (offline-friendly)
 ```
 
 ## Optional LLM-powered tagging
@@ -196,12 +205,13 @@ Full details in `references/known_limits.md`.
 | [SKILL.md](./SKILL.md) | (For Claude) — the runtime instructions Claude reads |
 | [ETHICS.md](./ETHICS.md) | Before deploying for client work |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Submitting changes |
+| [SECURITY.md](./SECURITY.md) | Threat model, audit checks, and how to report vulnerabilities |
 | [CHANGELOG.md](./CHANGELOG.md) | What's new in each version |
 | `references/` | Deeper docs Claude reads on demand |
 
 ## Roadmap
 
-- **v0.3 (shipped)** — Cross-platform support (Windows + Linux + macOS), portable `install.py`, UTF-8 hardening, install-all-by-default.
+- **v0.3 (shipped)** — Cross-platform support (Windows + Linux + macOS), portable `install.py`, UTF-8 hardening across every file I/O site, opt-in optional dependencies (`--with-playwright` / `--with-anthropic`), in-HTML Downloads section with working `<a download>` cards, auto-open the executive summary in the user's browser, and an update-check banner against GitHub Releases.
 - v0.4 — Multilingual theme tagging via LLM (closes the English-only limit)
 - v0.4 — Sentiment scoring per theme (not just count)
 - v0.5 — Historical trend tracking (compare runs over time)

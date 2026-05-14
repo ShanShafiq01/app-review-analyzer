@@ -2,6 +2,40 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.4] — 2026-05-14
+
+Bridges the "I clicked the filename in chat and nothing happened" gap. Three things ship together:
+
+### Added
+
+- **Downloads section inside every HTML report.** The executive summary and both deep-dives now end with a styled grid of cards — one per generated file (xlsx, csv, json, md, sibling HTMLs). HTML cards use plain `<a href>` (open in browser); xlsx / csv / json / md cards use `<a href download>` which triggers a Save dialog and bypasses the `file://` MIME-blocking that prevented direct clicks. Once the user has the HTML open, every other artifact is one click away.
+- **Auto-open in the user's default browser** when running the CLI interactively. The pipeline detects TTY mode and calls `webbrowser.open()` on the executive summary (or whichever deep-dive is primary in single-store mode). Gated on `--no-open` and `--quiet` so CI / headless / scripted runs are unaffected.
+- **Update-check banner.** On each pipeline run (cached for 24h in `~/.cache/app-review-analyzer/`), the tool hits the GitHub Releases API and prints a one-line `Update available: vX.Y.Z → vA.B.C` notice if the local version is behind. Gated on `--no-update-check`. Silent on network failure, repo-not-yet-public, parse errors, or any other issue — never blocks the pipeline.
+
+### Changed
+
+- **SKILL.md presentation guidance for Claude Code:** the previous advice (emit each file as a clickable `file://` markdown link) doesn't work in practice — claude.ai web blocks `file://` from `https://` origins, VSCode chat opens HTML as source text, terminals can't navigate paths. New guidance: one sentence pointing users at the in-HTML Downloads section, plus a fenced code block with `open <absolute-path>` (chat clients render this with a copy button).
+- **Pipeline user message** ends with a copy-friendly `open <path>` command in case auto-open didn't fire.
+
+### Update path for existing users
+
+```bash
+# Claude Code (cloned into ~/.claude/skills/)
+cd ~/.claude/skills/app-review-analyzer
+git pull
+./setup.sh        # idempotent — re-runs install.py against the existing venv
+
+# Windows
+.\setup.ps1
+
+# Any OS
+python install.py
+```
+
+claude.ai web users on a `.skill` zip: re-download the v0.3.4 release zip and re-upload via Settings → Skills.
+
+---
+
 ## [0.3.3] — 2026-05-14
 
 Channel-aware file presentation.

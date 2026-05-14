@@ -283,12 +283,53 @@ The skill writes no files outside its own directory, so removal is clean.
 
 ## Updating
 
+The pipeline checks for updates on each run (cached for 24h) and prints a one-line banner if a newer version is available. To apply an update:
+
+### If you cloned via git (Claude Code or standalone)
+
+**macOS / Linux:**
 ```bash
-cd ~/.claude/skills/app-review-analyzer
+cd ~/.claude/skills/app-review-analyzer   # or wherever you cloned it
 git pull
-./setup.sh        # or  .\setup.ps1  on Windows  /  python install.py  anywhere
+./setup.sh
 ```
 
-Or download the latest release from the GitHub releases page.
+**Windows (PowerShell):**
+```powershell
+cd $env:USERPROFILE\.claude\skills\app-review-analyzer
+git pull
+.\setup.ps1
+```
+
+**Any OS (portable):**
+```bash
+git pull
+python install.py
+```
+
+The installer is idempotent — it reuses your existing `.venv` if healthy, only reinstalls deps that changed.
+
+### If you uploaded a `.skill` zip to claude.ai
+
+1. Download the latest `.skill` from [Releases](https://github.com/ShanShafiq01/app-review-analyzer/releases)
+2. Settings → Capabilities → Skills → delete the old version
+3. Click **Upload skill** and select the new zip
+
+You won't see an in-app update notification — re-check the Releases page periodically, or follow the GitHub repo for notifications.
+
+### Behavior changes worth knowing across versions
+
+When pulling a new version, skim the relevant CHANGELOG entries for behavior changes. Recent examples:
+
+- **v0.3.4** added auto-browser-open at end of pipeline (disable with `--no-open`), an in-HTML Downloads section, and the update-check banner (disable with `--no-update-check`).
+- **v0.3.1** flipped the installer's optional-deps default — `--with-playwright` and `--with-anthropic` are now opt-in (was opt-out). If your CI scripts assumed Chromium would be installed automatically with `--yes`, add `--with-playwright` explicitly.
+
+### Disabling the update-check (CI / offline use)
+
+```bash
+python -m scripts.run_pipeline ... --no-update-check
+```
+
+The check times out after 3 seconds, caches the result for 24 hours in `~/.cache/app-review-analyzer/`, and fails silently on any error (network, GitHub API rate limits, parse failures) — so it never blocks the pipeline. Disable explicitly only if you want to avoid the network call entirely.
 
 Check `CHANGELOG.md` to see what changed between versions.

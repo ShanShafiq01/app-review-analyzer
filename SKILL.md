@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.3.3
+version: 0.3.4
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -100,7 +100,15 @@ The `run_pipeline` function returns a dict:
 How to present depends on the channel:
 
 - **In claude.ai (web/desktop) — sandboxed runtime:** write outputs to `/mnt/user-data/outputs/<app_slug>/` and call `present_files` so the user gets one-click download buttons in the chat. This is the canonical Anthropic pattern for surfacing generated artifacts. If the user did not specify `--output`, default to `/mnt/user-data/outputs/<app_slug>/` when you detect the sandbox.
-- **In Claude Code (CLI / VSCode extension) — local filesystem:** outputs live on the user's disk. `present_files` is unavailable. Instead, output each file as a **clickable markdown link with an absolute `file://` URL**, like `[executive_summary.html](file:///Users/you/proov-review-analysis/executive_summary.html)`. These are cmd-clickable in VSCode's integrated terminal and most modern terminals. Also include a one-line `open <path>` command (macOS) / `xdg-open <path>` (Linux) / `start <path>` (Windows) so non-clicky terminals still have a one-liner. Always use **absolute paths**, not `~/...` — `~` is not expanded inside markdown link URLs and the link won't work.
+- **In Claude Code (CLI / VSCode extension / terminal) — local filesystem:** the pipeline already does most of the work for you. When run in a TTY, it **auto-opens the executive summary in the user's default browser**, and the HTML itself contains a **Downloads** section with working `<a download>` links for every other generated file (xlsx, csv, json, markdown). So your job is much simpler than it used to be:
+  1. Lead with one sentence: "The executive summary should have opened in your browser. Scroll to the **Downloads** section for the Excel workbook and raw CSVs."
+  2. Then output the one-line `open <absolute-path>` command **inside a fenced code block** — every chat client renders this with a copy button:
+     ```
+     open /Users/you/proov-review-analysis/executive_summary.html
+     ```
+     Use `open` on macOS, `xdg-open` on Linux, `start` on Windows. Always use **absolute paths**.
+  3. DO NOT write a bullet list of file names like "executive_summary.html — start here / playstore_deepdive.html / ...". File names rendered as text or as markdown links generally do NOT open files when clicked (claude.ai web blocks `file://` from its `https://` origin; VSCode chat opens HTML as source text; terminals can't navigate paths). Pointing users at the in-HTML Downloads section is what actually works.
+  4. Briefly name what's in the report — review count per store, taxonomy used, top finding — but keep file-finding instructions to the single `open` command + the Downloads-section hint above.
 
 Either way, never just dump raw paths as plain text. Make the files actionable.
 
