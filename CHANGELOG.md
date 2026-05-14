@@ -2,6 +2,16 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.2] — 2026-05-14
+
+README refresh to reflect v0.3 reality.
+
+### Changed
+
+- **README**: dropped the "what's different about v0.2" framing (we're past it), replaced the named-app example output ("Calm") with a generic placeholder, added Cross-platform + UTF-8 + Security-audited installer rows to the production hardening table, surfaced Windows/Linux install commands alongside the macOS one in the Install section, and bumped the roadmap one version (v0.3 marked shipped; multilingual/sentiment moved to v0.4; trends/white-label to v0.5; cross-app comparison to v0.6).
+
+---
+
 ## [0.3.1] — 2026-05-14
 
 Polish release on top of v0.3.0.

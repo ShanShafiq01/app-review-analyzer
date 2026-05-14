@@ -7,7 +7,7 @@ A Claude skill that scrapes published reviews from the Apple App Store and Googl
 Built for production use. Handles Apple's aggressive rate-limiting. Surfaces clear messages to humans, not HTTP codes.
 
 ```
-You:    Analyze reviews for Calm
+You:    Analyze reviews for <your app on both stores>
 Claude: [Both stores, default formats? Y]
 
 [Step 1/5] Pulling Google Play reviews...
@@ -21,16 +21,16 @@ Claude: [Both stores, default formats? Y]
 [Step 4/5] Running analysis...
 [Step 5/5] Generating outputs: html, excel, csv
 
-✓ Analysis complete for Calm
+✓ Analysis complete
   Reviews analyzed: 234 Play + 196 App Store = 430 total
 
-Files generated in ./output/calm:
+Files generated in ./output/myapp:
   executive_summary.html · playstore_deepdive.html
-  appstore_deepdive.html · calm_reviews.xlsx
+  appstore_deepdive.html · myapp_reviews.xlsx
   playstore_reviews.csv · appstore_reviews.csv · all_reviews.csv
 
 Top three findings:
-  +0.45★  iOS users rate Calm higher than Android
+  +0.45★  iOS users rate higher than Android
   62      reviews complain about subscription friction (#1 theme)
   47%     of 5-star reviews mention "sleep" or "anxiety"
 ```
@@ -68,7 +68,10 @@ See [INSTALL.md](./INSTALL.md) for all three paths. Quick version:
 git clone https://github.com/ShanShafiq01/app-review-analyzer.git \
   ~/.claude/skills/app-review-analyzer
 cd ~/.claude/skills/app-review-analyzer
-./setup.sh
+
+./setup.sh        # macOS / Linux
+.\setup.ps1       # Windows PowerShell
+python install.py # any OS — portable
 ```
 
 Then in Claude Code: `Analyze reviews for <app name on both stores>`
@@ -88,12 +91,14 @@ python -m scripts.run_pipeline \
   --output ./output/myapp
 ```
 
-## Production hardening (what's different about v0.2)
+## Production hardening
 
-This is the rewrite that came out of testing against real apps at scale. v0.1 worked. v0.2 doesn't break when Apple is having a bad day.
+What testing against real apps at scale taught us. The skill is built so it doesn't break when Apple is having a bad day, doesn't mojibake non-English reviews, and runs on every major OS.
 
 | What | How |
 |---|---|
+| **Cross-platform** | macOS (arm64 + x86_64), Linux, and Windows (PowerShell). Apple Silicon + Windows-on-ARM arch checks refuse mismatched Pythons before pandas/numpy fail mid-build. |
+| **UTF-8 everywhere** | Every file I/O site declares `encoding="utf-8"`. Non-English reviews (French, Japanese, German, emoji, smart quotes) round-trip correctly through every output format on every OS — no Windows `cp1252` surprises. |
 | **Rate-limit handling** | Exponential backoff with jitter (5s, 15s, 45s ± 20%) on 429/503 |
 | **Country rotation** | Pages interleaved across countries — never hammer one |
 | **Retry-After header** | Honored when Apple sends it |
@@ -103,6 +108,7 @@ This is the rewrite that came out of testing against real apps at scale. v0.1 wo
 | **Test fixtures** | Unit tests + integration tests against small real apps |
 | **Per-format isolation** | If PDF generation fails, Excel still works |
 | **Detailed progress** | Numbered steps, real-time status, no firehose of HTTP codes |
+| **Security-audited installer** | List-form subprocess calls only, no `shell=True`, PEP 668 detection for Debian/Homebrew Pythons, pinned Playwright revision. See [SECURITY.md](./SECURITY.md). |
 
 See `WORKFLOW.md` for a full diagram of inputs, steps, and outputs.
 
@@ -195,11 +201,12 @@ Full details in `references/known_limits.md`.
 
 ## Roadmap
 
-- v0.3 — Multilingual theme tagging via LLM
-- v0.3 — Sentiment scoring per theme (not just count)
-- v0.4 — Historical trend tracking (compare runs over time)
-- v0.4 — Custom-branded templates for white-label
-- v0.5 — Cross-app competitive comparison (X vs Y vs Z in one report)
+- **v0.3 (shipped)** — Cross-platform support (Windows + Linux + macOS), portable `install.py`, UTF-8 hardening, install-all-by-default.
+- v0.4 — Multilingual theme tagging via LLM (closes the English-only limit)
+- v0.4 — Sentiment scoring per theme (not just count)
+- v0.5 — Historical trend tracking (compare runs over time)
+- v0.5 — Custom-branded templates for white-label use
+- v0.6 — Cross-app competitive comparison (X vs Y vs Z in one report)
 
 ### Repository structure
 
