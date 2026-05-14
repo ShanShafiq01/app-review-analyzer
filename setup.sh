@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# App Review Analyzer — setup
+# App Review Analyzer — macOS / Linux setup
 # Run from the project root:  ./setup.sh
+#
+# This script picks a usable Python (>= 3.10) matching the host architecture,
+# then delegates to install.py — which handles the venv, deps, and smoke test.
+# Pass extra args through:  ./setup.sh --yes --no-playwright
 
 set -e
 
@@ -13,74 +17,76 @@ NC='\033[0m'
 echo -e "${GREEN}App Review Analyzer — setup${NC}"
 echo
 
-# Python version check
-if ! command -v python3 &>/dev/null; then
-    echo -e "${RED}ERROR:${NC} Python 3 is required but not found."
+# Force UTF-8 in the child Python process — protects against UnicodeEncodeError
+# in LC_ALL=C / minimal-container environments when printing non-ASCII review text
+export PYTHONUTF8=1
+export PYTHONIOENCODING=utf-8
+
+# ──────────────────────────────────────────────────────────────────
+# Pick a usable Python (>= 3.10, matching arch)
+# ──────────────────────────────────────────────────────────────────
+MIN_MAJOR=3
+MIN_MINOR=10
+SYSTEM_ARCH=$(uname -m)   # arm64 on Apple Silicon, x86_64 elsewhere
+
+pick_python() {
+    # Candidate Pythons, ordered newest-first
+    local candidates=(
+        python3.13 python3.12 python3.11 python3.10
+        /Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13
+        /Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12
+        /Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+        /opt/homebrew/bin/python3.13 /opt/homebrew/bin/python3.12 /opt/homebrew/bin/python3.11
+        /usr/local/bin/python3.13 /usr/local/bin/python3.12 /usr/local/bin/python3.11
+        python3
+    )
+    local py
+    for py in "${candidates[@]}"; do
+        # For PATH names, command -v resolves them; for absolute paths, check -x directly
+        if [[ "$py" == /* ]]; then
+            [[ -x "$py" ]] || continue
+        else
+            command -v "$py" &>/dev/null || continue
+        fi
+        # Probe version + arch in one call, check against minimums
+        if SYSTEM_ARCH_PROBE="$SYSTEM_ARCH" MIN_MAJOR_PROBE="$MIN_MAJOR" MIN_MINOR_PROBE="$MIN_MINOR" \
+           "$py" -c '
+import os, sys, platform
+ok = sys.version_info >= (int(os.environ["MIN_MAJOR_PROBE"]), int(os.environ["MIN_MINOR_PROBE"]))
+if sys.platform == "darwin" and os.environ["SYSTEM_ARCH_PROBE"] == "arm64" and platform.machine() != "arm64":
+    ok = False
+sys.exit(0 if ok else 1)
+' 2>/dev/null; then
+            echo "$py"
+            return 0
+        fi
+    done
+    return 1
+}
+
+PY=$(pick_python) || true
+if [[ -z "$PY" ]]; then
+    echo -e "${RED}ERROR:${NC} Could not find a usable Python."
+    echo "  Need Python ${MIN_MAJOR}.${MIN_MINOR}+ matching this machine's architecture (${SYSTEM_ARCH})."
+    echo "  Install from https://www.python.org/downloads/ (universal2 installer)"
+    echo "  or:  brew install python@3.13"
     exit 1
 fi
 
-PY_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-echo -e "→ Python ${PY_VERSION} detected"
+PY_VERSION=$("$PY" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")')
+PY_ARCH=$("$PY" -c 'import platform; print(platform.machine())')
+echo -e "→ Using Python ${PY_VERSION} (${PY_ARCH})  at  ${PY}"
 
-# Determine pip install flags
-PIP_FLAGS=""
-if [[ "$1" == "--user" ]]; then
-    PIP_FLAGS="--user"
-elif [[ "$1" == "--system" ]]; then
-    PIP_FLAGS="--break-system-packages"
+# ──────────────────────────────────────────────────────────────────
+# Delegate to install.py — handles venv (with health check), deps, smoke test
+# ──────────────────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+INSTALL_PY="${SCRIPT_DIR}/install.py"
+
+if [[ ! -f "$INSTALL_PY" ]]; then
+    echo -e "${RED}ERROR:${NC} install.py not found at $INSTALL_PY"
+    exit 1
 fi
 
-# Core deps
-echo -e "→ Installing core dependencies..."
-python3 -m pip install $PIP_FLAGS --quiet \
-    google-play-scraper requests pandas openpyxl
-
-# Optional deps
-echo
-echo -e "${YELLOW}Optional dependencies:${NC}"
-echo
-
-read -p "  Install playwright for PDF output? [Y/n] " -n 1 -r REPLY
-echo
-if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    python3 -m pip install $PIP_FLAGS --quiet playwright
-    echo "  → Installing Chromium for headless rendering..."
-    python3 -m playwright install chromium --with-deps 2>/dev/null || \
-        python3 -m playwright install chromium
-    echo "  → PDF generation ready"
-else
-    echo "  → Skipped (PDF generation will not work)"
-fi
-
-read -p "  Install anthropic for LLM-powered theme tagging? [y/N] " -n 1 -r REPLY
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    python3 -m pip install $PIP_FLAGS --quiet anthropic
-    echo "  → Anthropic SDK installed. Set ANTHROPIC_API_KEY before using --llm-tagging"
-else
-    echo "  → Skipped (keyword tagging still works fine)"
-fi
-
-# Smoke test
-echo
-echo -e "${GREEN}→ Running smoke test...${NC}"
-python3 -c "
-from scripts.theme_tagger import load_taxonomy, list_available_taxonomies
-tax = load_taxonomy('general')
-print(f'  Loaded \"{tax[\"label\"]}\": {len(tax[\"negative_themes\"])} negative + {len(tax[\"positive_themes\"])} positive themes')
-print(f'  Available taxonomies: {len(list_available_taxonomies())}')
-"
-
-echo
-echo -e "${GREEN}✓ Setup complete.${NC}"
-echo
-echo "Try it:"
-echo
-echo "  python3 -m scripts.run_pipeline \\"
-echo "      --play com.duolingo \\"
-echo "      --appstore 570060128 \\"
-echo "      --formats html,excel,csv \\"
-echo "      --output ./output/duolingo"
-echo
-echo "Or in Claude:  \"Analyze reviews for Duolingo on both stores\""
-echo
+# Forward all extra args to install.py
+exec "$PY" "$INSTALL_PY" "$@"

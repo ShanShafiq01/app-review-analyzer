@@ -1,9 +1,17 @@
-# Core dependencies — always required
+# App Review Analyzer — dependency manifest.
+#
+# This file is the single source of truth for dependency versions. install.py
+# parses it at runtime, so updating a pin here automatically updates installs.
+#
+# Sections are split by the "# CORE" / "# OPTIONAL" header lines below — the
+# parser uses those headers, do not rename them.
+
+# CORE
 google-play-scraper>=1.2.4
 requests>=2.31.0
 pandas>=2.0.0
 openpyxl>=3.1.0
 
-# Optional — only needed for specific output formats / features
-playwright>=1.40.0    # PDF generation (also run: playwright install chromium)
-anthropic>=0.39.0     # LLM-powered theme tagging (set ANTHROPIC_API_KEY)
+# OPTIONAL
+playwright>=1.40.0,<2.0    # PDF generation (also run: playwright install chromium)
+anthropic>=0.39.0          # LLM-powered theme tagging (set ANTHROPIC_API_KEY)
