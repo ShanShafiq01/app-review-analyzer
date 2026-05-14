@@ -291,6 +291,33 @@ def run_pipeline(
     result["success"] = True
     result["generated_files"] = generated
 
+    # ────────────────── Post-process: inject Downloads section into HTML ──────────────────
+    # Runs AFTER every other format finishes, so the Downloads grid lists actual
+    # generated files (xlsx, csv, json, md) — not predicted ones. Failed formats
+    # are simply absent from the section, which degrades cleanly.
+    primary_html = None
+    if "html" in formats and generated.get("html"):
+        try:
+            from generate_html import inject_downloads
+            inject_downloads(output_dir)
+        except Exception as exc:
+            _log(f"  Downloads section injection failed ({type(exc).__name__}: {exc}) — HTML still works")
+
+        # Prefer executive_summary.html as the file to auto-open / surface.
+        # Fall back to the first deep-dive if no executive (single-store case).
+        for fname in ("executive_summary.html", "playstore_deepdive.html", "appstore_deepdive.html"):
+            candidate = output_dir / fname
+            if candidate.exists():
+                primary_html = candidate
+                break
+
+    # Surface the primary report so main() (or any caller) can auto-open it.
+    # We don't open here — that's main()'s responsibility, gated on TTY + --no-open.
+    # Keeping the side effect out of the library function so programmatic callers
+    # don't get a browser window they didn't ask for.
+    if primary_html and primary_html.exists():
+        result["primary_output"] = str(primary_html.resolve())
+
     # Build the user message
     msg_parts = [f"\n✓ Analysis complete for {app_display_name}"]
     msg_parts.append(f"  Reviews analyzed: {result['play_count']} Play + {result['ios_count']} App Store = {result['play_count'] + result['ios_count']} total")
@@ -303,6 +330,18 @@ def run_pipeline(
         for fmt, files in generated.items():
             for f in files:
                 msg_parts.append(f"  [{fmt}] {Path(f).name}")
+
+    # Surface a single copy-friendly command. Filenames-as-links don't actually
+    # work in many chat clients (claude.ai web blocks file://, VSCode chat opens
+    # HTML as source, terminals can't navigate file paths). This command can be
+    # copy-pasted into a terminal in any context. Once the HTML is open, its
+    # Downloads section has working <a download> links for xlsx/csv/json/md, so
+    # the user has one-click access to every other file without going back to chat.
+    if primary_html and primary_html.exists():
+        opener = "open" if sys.platform == "darwin" else ("start" if sys.platform == "win32" else "xdg-open")
+        msg_parts.append(f"\nIf the report didn't open automatically, run:")
+        msg_parts.append(f"  {opener} {primary_html.resolve()}")
+
     result["user_message"] = "\n".join(msg_parts)
 
     _log(result["user_message"])
@@ -349,6 +388,10 @@ Examples:
     parser.add_argument("--byline")
     parser.add_argument("--llm-tagging", action="store_true")
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--no-open", action="store_true",
+                        help="Don't auto-open the executive summary in a browser when finished.")
+    parser.add_argument("--no-update-check", action="store_true",
+                        help="Don't check GitHub for a newer release. (Cached 24h; fails silently otherwise.)")
     args = parser.parse_args()
 
     play_id = parse_url_or_id(args.play, "play")
@@ -371,6 +414,36 @@ Examples:
         use_llm=args.llm_tagging,
         progress_callback=callback,
     )
+
+    # Auto-open the primary report in a browser when we're in interactive use.
+    # Skipped when: user passed --no-open, --quiet, or stdout/stdin is not a TTY (CI, pipes).
+    primary = result.get("primary_output")
+    if (primary
+            and not args.no_open
+            and not args.quiet
+            and sys.stdout.isatty()
+            and sys.stdin.isatty()):
+        try:
+            import webbrowser
+            # Path.as_uri() correctly handles Windows drive letters and backslashes
+            # (file:///C:/Users/...). String-concat of f"file://{path}" produces an
+            # invalid URI on Windows and most browsers silently refuse to open it.
+            webbrowser.open(Path(primary).as_uri())
+        except Exception:
+            pass  # opening is a nicety, not a guarantee
+
+    # Update-check banner. Cached for 24h, fails silently on any error
+    # (network down, repo not yet public, parse failure). Only prints when a
+    # newer version is actually available — never spams the user.
+    if not args.no_update_check and not args.quiet:
+        try:
+            from update_check import check_for_update, format_banner
+            info = check_for_update()
+            if info and info.update_available:
+                install_dir = Path(__file__).resolve().parent.parent
+                print(format_banner(info, install_dir=install_dir), file=sys.stderr)
+        except Exception:
+            pass  # update check is best-effort; never block the pipeline
 
     sys.exit(0 if result["success"] else 1)
 

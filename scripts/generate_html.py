@@ -253,6 +253,15 @@ body {
 .insights { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; margin-top: 40px; }
 .insight { background: var(--card); border: 1px solid var(--rule); padding: 36px; }
 .insight-num { font-family: 'Fraunces', serif; font-size: 13px; letter-spacing: 0.3em; color: var(--brand-primary); font-weight: 600; margin-bottom: 14px; }
+
+.downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 36px; }
+.dl-card { background: var(--card); border: 1px solid var(--rule); padding: 22px 24px; display: flex; flex-direction: column; gap: 8px; transition: border-color 0.15s ease; }
+.dl-card:hover { border-color: var(--brand-primary); }
+.dl-label { font-family: 'Fraunces', serif; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-mute); font-weight: 600; }
+.dl-name { font-family: 'Newsreader', serif; font-size: 17px; line-height: 1.3; color: var(--ink); font-weight: 500; word-break: break-all; }
+.dl-meta { font-size: 12px; color: var(--ink-mute); margin-top: 2px; }
+.dl-action { margin-top: 10px; display: inline-block; font-family: 'Fraunces', serif; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--brand-primary); font-weight: 600; text-decoration: none; border-bottom: 1.5px solid var(--brand-primary); padding-bottom: 1px; align-self: flex-start; }
+.dl-action:hover { color: var(--ink); border-color: var(--ink); }
 .insight-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; line-height: 1.15; margin-bottom: 14px; font-variation-settings: "SOFT" 60; }
 .insight-body { font-size: 16px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 16px; }
 .insight-evidence { font-size: 13px; line-height: 1.5; color: var(--ink-mute); padding-top: 14px; border-top: 1px solid var(--rule); font-style: italic; }
@@ -836,6 +845,13 @@ def build_executive_summary(data, app_name, byline=None):
   <div class="insights">{insights_html}</div>
 </section>
 
+<section class="section" id="downloads">
+  <div class="section-num">DOWNLOADS</div>
+  <h2 class="section-title">Take the <em>data</em> with you.</h2>
+  <p class="section-intro">Every output this analysis generated. Click to open or save.</p>
+  <!-- DOWNLOADS_PLACEHOLDER -->
+</section>
+
 </div>
 
 <footer class="footer"><div class="wrap"><div class="footer-grid">
@@ -1055,6 +1071,13 @@ def build_deepdive(data, store_key, app_name, byline=None):
   <div class="insights">{insights_html}</div>
 </section>
 
+<section class="section" id="downloads">
+  <div class="section-num">DOWNLOADS</div>
+  <h2 class="section-title">Take the <em>data</em> with you.</h2>
+  <p class="section-intro">Every output this analysis generated. Click to open or save.</p>
+  <!-- DOWNLOADS_PLACEHOLDER -->
+</section>
+
 {archive_html}
 
 </div>
@@ -1109,6 +1132,133 @@ def generate_html_reports(data, output_dir, app_name, byline=None):
         files_written.append(str(ios_path))
 
     return files_written
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Downloads section — post-process step.
+#
+# Called by run_pipeline.py AFTER every format has been generated. Scans the
+# output directory for files, builds a styled grid of download cards, and
+# replaces the `<!-- DOWNLOADS_PLACEHOLDER -->` marker in any HTML file that
+# contains it. Doing this as a post-process means we list only files that
+# actually exist — partial generation failures degrade cleanly.
+# ════════════════════════════════════════════════════════════════════════════
+
+# Friendly labels + suggested action verb by file extension.
+_DOWNLOAD_KINDS = {
+    ".html":     ("WEB REPORT",      "Open"),
+    ".pdf":      ("PDF REPORT",      "Download"),
+    ".xlsx":     ("EXCEL WORKBOOK",  "Download"),
+    ".csv":      ("CSV TABLE",       "Download"),
+    ".md":       ("MARKDOWN",        "Download"),
+    ".markdown": ("MARKDOWN",        "Download"),
+    ".json":     ("RAW DATA (JSON)", "Download"),
+}
+
+# Display order — most-useful first. Files not in this list go after.
+_DOWNLOAD_ORDER = [
+    "executive_summary.html",
+    "playstore_deepdive.html",
+    "appstore_deepdive.html",
+]
+
+
+def _human_size(n_bytes: int) -> str:
+    for unit in ("B", "KB", "MB", "GB"):
+        if n_bytes < 1024 or unit == "GB":
+            if unit == "B":
+                return f"{n_bytes} {unit}"
+            return f"{n_bytes:.1f} {unit}".replace(".0 ", " ")
+        n_bytes /= 1024
+    return f"{n_bytes:.1f} GB"
+
+
+def _render_download_cards(output_dir: Path, exclude: set[str] | None = None) -> str:
+    """Render the inner HTML for the Downloads grid given an output directory."""
+    exclude = exclude or set()
+
+    files = []
+    for p in output_dir.iterdir():
+        if not p.is_file():
+            continue
+        if p.name in exclude:
+            continue
+        # Skip internal/intermediate artifacts
+        if p.name.startswith("_") or p.name.startswith("."):
+            continue
+        files.append(p)
+
+    # Sort by preference: known order first, then alphabetical
+    def sort_key(p: Path):
+        try:
+            return (_DOWNLOAD_ORDER.index(p.name), p.name)
+        except ValueError:
+            return (len(_DOWNLOAD_ORDER), p.name.lower())
+    files.sort(key=sort_key)
+
+    if not files:
+        return '<p style="color: var(--ink-mute); font-style: italic; margin-top: 24px;">No downloadable files found.</p>'
+
+    cards = []
+    for p in files:
+        ext = p.suffix.lower()
+        label, action = _DOWNLOAD_KINDS.get(ext, (ext.lstrip(".").upper() + " FILE", "Download"))
+        size = _human_size(p.stat().st_size)
+
+        # HTML files: open in same tab (no download attr) — let browser render.
+        # Everything else: download attribute triggers Save-As dialog, which
+        # bypasses file:// browser security that blocks navigation to unknown MIME types.
+        if ext == ".html":
+            href_attrs = f'href="{html.escape(p.name)}"'
+        else:
+            href_attrs = f'href="{html.escape(p.name)}" download="{html.escape(p.name)}"'
+
+        cards.append(f"""
+        <div class="dl-card">
+          <div class="dl-label">{html.escape(label)}</div>
+          <div class="dl-name">{html.escape(p.name)}</div>
+          <div class="dl-meta">{html.escape(size)}</div>
+          <a class="dl-action" {href_attrs}>{html.escape(action)} →</a>
+        </div>""")
+
+    return f'<div class="downloads">{"".join(cards)}</div>'
+
+
+def inject_downloads(output_dir) -> list[str]:
+    """Replace `<!-- DOWNLOADS_PLACEHOLDER -->` in every HTML file in output_dir.
+
+    Returns the list of files that were updated. Safe to call multiple times —
+    idempotent re-runs simply re-render the section against the current contents
+    of the directory.
+    """
+    output = Path(output_dir)
+    if not output.is_dir():
+        return []
+
+    updated: list[str] = []
+    html_files = sorted(p for p in output.iterdir()
+                        if p.is_file() and p.suffix.lower() == ".html")
+
+    for html_path in html_files:
+        try:
+            content = html_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        if "<!-- DOWNLOADS_PLACEHOLDER -->" not in content:
+            continue
+
+        # When rendering, exclude the current file so a deep-dive HTML doesn't
+        # list itself as a download. (The executive summary may list itself —
+        # that's fine, it appears alongside the deep dives.)
+        exclude = {html_path.name} if html_path.name != "executive_summary.html" else set()
+        section_html = _render_download_cards(output, exclude=exclude)
+        new_content = content.replace("<!-- DOWNLOADS_PLACEHOLDER -->", section_html, 1)
+
+        if new_content != content:
+            html_path.write_text(new_content, encoding="utf-8")
+            updated.append(str(html_path))
+
+    return updated
 
 
 if __name__ == "__main__":
