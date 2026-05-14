@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.3.2
+version: 0.3.3
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -95,7 +95,14 @@ The `run_pipeline` function returns a dict:
 }
 ```
 
-**On success:** call `present_files` with the generated files. Lead with the executive summary HTML (the most polished deliverable). If there were warnings, surface them clearly to the user before listing files.
+**On success:** present the generated files to the user, leading with the executive summary HTML (the most polished deliverable). If there were warnings, surface them clearly first.
+
+How to present depends on the channel:
+
+- **In claude.ai (web/desktop) — sandboxed runtime:** write outputs to `/mnt/user-data/outputs/<app_slug>/` and call `present_files` so the user gets one-click download buttons in the chat. This is the canonical Anthropic pattern for surfacing generated artifacts. If the user did not specify `--output`, default to `/mnt/user-data/outputs/<app_slug>/` when you detect the sandbox.
+- **In Claude Code (CLI / VSCode extension) — local filesystem:** outputs live on the user's disk. `present_files` is unavailable. Instead, output each file as a **clickable markdown link with an absolute `file://` URL**, like `[executive_summary.html](file:///Users/you/proov-review-analysis/executive_summary.html)`. These are cmd-clickable in VSCode's integrated terminal and most modern terminals. Also include a one-line `open <path>` command (macOS) / `xdg-open <path>` (Linux) / `start <path>` (Windows) so non-clicky terminals still have a one-liner. Always use **absolute paths**, not `~/...` — `~` is not expanded inside markdown link URLs and the link won't work.
+
+Either way, never just dump raw paths as plain text. Make the files actionable.
 
 **On partial success (warnings present but success=True):** present files but lead with the warning. Example:
 

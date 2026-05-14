@@ -2,6 +2,19 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.3] — 2026-05-14
+
+Channel-aware file presentation.
+
+### Changed
+
+- **Output files are now actionable in every channel.** SKILL.md and the `/review-analyze` slash command now instruct Claude to present generated files using the right pattern for the runtime:
+  - In **claude.ai (sandboxed)** — write to `/mnt/user-data/outputs/<app_slug>/` and call `present_files` so the user gets one-click download buttons in the chat.
+  - In **Claude Code (local filesystem)** — emit each file as a clickable markdown link with an absolute `file://` URL (e.g., `[executive_summary.html](file:///Users/you/.../executive_summary.html)`), cmd-clickable in VSCode's integrated terminal and modern terminals, plus a one-liner `open` / `xdg-open` / `start` command for terminals that don't auto-link.
+- Both surfaces now explicitly forbid dumping raw `~/...` paths as plain text — tildes don't expand inside markdown link URLs, so absolute paths only.
+
+---
+
 ## [0.3.2] — 2026-05-14
 
 README refresh to reflect v0.3 reality.

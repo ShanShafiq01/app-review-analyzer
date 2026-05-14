@@ -42,7 +42,10 @@ When invoked, follow the App Review Analyzer skill workflow:
      --output ./output/<app_slug>
    ```
 
-5. **Present the files** using `present_files`, leading with the executive summary HTML.
+5. **Present the files** so the user can actually open them. Channel-dependent:
+   - **claude.ai (sandboxed):** write outputs to `/mnt/user-data/outputs/<app_slug>/` and call `present_files` — gives the user one-click download buttons in chat.
+   - **Claude Code (local filesystem):** output each generated file as a clickable markdown link using an absolute `file://` URL (e.g., `[executive_summary.html](file:///absolute/path/here.html)`) and include an `open <path>` command for the non-clickable case. Use absolute paths, not `~/...` (markdown links don't expand tildes).
+   Always lead with `executive_summary.html` — it's the highest-value deliverable.
 
 6. **Briefly summarize** the top 2-3 findings in chat so the user knows what to look at first.
 
