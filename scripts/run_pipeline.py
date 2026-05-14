@@ -26,6 +26,12 @@ import sys
 import time
 from pathlib import Path
 
+# Force UTF-8 stdout/stderr — review text contains emoji, accents, CJK characters
+# and would UnicodeEncodeError under LC_ALL=C or minimal-container locales otherwise.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 from fetch_playstore import fetch_playstore_reviews, fetch_app_metadata as fetch_play_meta
@@ -226,7 +232,7 @@ def run_pipeline(
     data["_app_name"] = app_display_name
 
     # Always save the analysis JSON for inspection/debugging
-    (output_dir / "_analysis.json").write_text(json.dumps(data, indent=2, default=str))
+    (output_dir / "_analysis.json").write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
 
     # ────────────────── Step 5: Generate ──────────────────
     _log(f"\n[Step 5/5] Generating outputs: {', '.join(sorted(formats))}")

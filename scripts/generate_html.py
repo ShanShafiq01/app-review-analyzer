@@ -1093,19 +1093,19 @@ def generate_html_reports(data, output_dir, app_name, byline=None):
     if has_both_stores:
         exec_html = build_executive_summary(data, app_name, byline)
         exec_path = output / "executive_summary.html"
-        exec_path.write_text(exec_html)
+        exec_path.write_text(exec_html, encoding="utf-8")
         files_written.append(str(exec_path))
 
     if data["play"] and data["play"]["total"] > 0:
         play_html = build_deepdive(data, "play", app_name, byline)
         play_path = output / "playstore_deepdive.html"
-        play_path.write_text(play_html)
+        play_path.write_text(play_html, encoding="utf-8")
         files_written.append(str(play_path))
 
     if data["ios"] and data["ios"]["total"] > 0:
         ios_html = build_deepdive(data, "ios", app_name, byline)
         ios_path = output / "appstore_deepdive.html"
-        ios_path.write_text(ios_html)
+        ios_path.write_text(ios_html, encoding="utf-8")
         files_written.append(str(ios_path))
 
     return files_written
@@ -1120,7 +1120,7 @@ if __name__ == "__main__":
     parser.add_argument("--byline", help="Optional byline for the footer")
     args = parser.parse_args()
 
-    data = json.loads(Path(args.input).read_text())
+    data = json.loads(Path(args.input).read_text(encoding="utf-8"))
     files = generate_html_reports(data, args.output, args.app_name, args.byline)
     for f in files:
         print(f)

@@ -171,7 +171,7 @@ def main():
     if args.output == "-":
         print(out)
     else:
-        Path(args.output).write_text(out)
+        Path(args.output).write_text(out, encoding="utf-8")
 
 
 if __name__ == "__main__":

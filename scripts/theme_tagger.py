@@ -40,7 +40,7 @@ def load_taxonomy(taxonomy_path: str | Path, themes_dir: str | Path = None) -> d
         else:
             raise FileNotFoundError(f"Taxonomy not found: {taxonomy_path}")
 
-    taxonomy = json.loads(p.read_text())
+    taxonomy = json.loads(p.read_text(encoding="utf-8"))
 
     # Resolve inheritance chain
     if taxonomy.get("extends"):
@@ -137,7 +137,7 @@ def list_available_taxonomies(themes_dir: str | Path = None) -> list[dict]:
     out = []
     for p in sorted(themes_dir.glob("*.json")):
         try:
-            data = json.loads(p.read_text())
+            data = json.loads(p.read_text(encoding="utf-8"))
             out.append({
                 "name": data.get("name", p.stem),
                 "label": data.get("label", p.stem),

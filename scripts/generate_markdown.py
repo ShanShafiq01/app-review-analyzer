@@ -177,7 +177,7 @@ def generate_markdown_report(data, output_path, app_name, byline=None):
     lines.append("**Caveats:** App Store RSS is capped at ~500 reviews per country. Both stores report higher total ratings than text reviews because most users tap stars without writing.")
     lines.append("")
 
-    output.write_text("\n".join(lines))
+    output.write_text("\n".join(lines), encoding="utf-8")
     return str(output)
 
 
@@ -189,5 +189,5 @@ if __name__ == "__main__":
     parser.add_argument("--app-name", required=True)
     parser.add_argument("--byline")
     args = parser.parse_args()
-    data = json.loads(Path(args.input).read_text())
+    data = json.loads(Path(args.input).read_text(encoding="utf-8"))
     print(generate_markdown_report(data, args.output, args.app_name, args.byline))

@@ -129,5 +129,5 @@ if __name__ == "__main__":
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
-    data = json.loads(Path(args.input).read_text())
+    data = json.loads(Path(args.input).read_text(encoding="utf-8"))
     print(generate_excel_report(data, args.output))
