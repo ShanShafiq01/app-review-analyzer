@@ -215,6 +215,91 @@ def find_power_quotes(reviews: list[dict], source: str, max_count: int = 5) -> l
     return candidates[:max_count]
 
 
+def compute_top_findings(data: dict, app_name: str) -> list[str]:
+    """Extract up to 3 data-grounded headline findings from the analysis.
+
+    Conservative by design: returns FEWER findings if the data doesn't support
+    them. Never invents claims. Each finding cites concrete numbers from the
+    underlying data.
+
+    Priority order (each candidate must clear its threshold to appear):
+      1. Cross-store rating gap — only if both stores present AND gap >= 0.25★.
+         A tiny gap is noise; below this threshold we don't surface it.
+      2. Top negative theme — only if it has >= 10 mentions. Below 10, a
+         "#1 complaint" claim is statistically meaningless.
+      3. Top positive theme in 5-star reviews — only if it accounts for >= 15%
+         of 5-star reviews AND has >= 10 mentions. Below this, it's not a
+         meaningful loyalty signal.
+
+    Returns 0-3 strings depending on signal strength. Callers should handle
+    the empty-list case (small app, no clear patterns) gracefully.
+    """
+    MIN_THEME_COUNT = 10
+    MIN_RATING_GAP = 0.25
+    MIN_FIVE_STAR_PCT = 15
+
+    findings: list[str] = []
+    play = data.get("play")
+    ios = data.get("ios")
+    cross = data.get("cross") or {}
+    taxonomy = data.get("taxonomy", {})
+    neg_labels = taxonomy.get("negative_themes", {})
+    pos_labels = taxonomy.get("positive_themes", {})
+
+    # ── Finding 1: Cross-store rating gap (only if both stores present) ──
+    if play and ios:
+        gap = cross.get("gap", 0)  # cross.gap = ios_avg - play_avg
+        if abs(gap) >= MIN_RATING_GAP:
+            if gap > 0:
+                findings.append(
+                    f"iOS users rate {app_name} +{abs(gap):.2f}★ higher than Android "
+                    f"({cross['ios_avg']} vs {cross['play_avg']})"
+                )
+            else:
+                findings.append(
+                    f"Android users rate {app_name} +{abs(gap):.2f}★ higher than iOS "
+                    f"({cross['play_avg']} vs {cross['ios_avg']})"
+                )
+
+    # ── Finding 2: Top negative theme by count (combined across stores) ──
+    combined_neg: dict[str, int] = {}
+    for store in (play, ios):
+        if store:
+            for theme, count in store.get("neg_counts", {}).items():
+                combined_neg[theme] = combined_neg.get(theme, 0) + count
+    if combined_neg:
+        top_theme, top_count = max(combined_neg.items(), key=lambda kv: kv[1])
+        if top_count >= MIN_THEME_COUNT:
+            label = neg_labels.get(top_theme, top_theme)
+            scope = "across both stores" if (play and ios) else ""
+            findings.append(
+                f"{top_count} reviews name {label.lower() if isinstance(label, str) else top_theme} "
+                f"— the #1 complaint{' ' + scope if scope else ''}"
+            )
+
+    # ── Finding 3: Top positive theme as % of 5-star reviews ──
+    all_reviews = data.get("all_reviews", [])
+    five_star_reviews = [r for r in all_reviews if r.get("rating") == 5]
+    if five_star_reviews and len(five_star_reviews) >= 20:
+        five_star_themes: Counter = Counter()
+        for r in five_star_reviews:
+            for t in r.get("themes_pos", []):
+                five_star_themes[t] += 1
+        if five_star_themes:
+            top_pos, top_pos_count = five_star_themes.most_common(1)[0]
+            if top_pos_count >= MIN_THEME_COUNT:
+                pct = round(top_pos_count / len(five_star_reviews) * 100)
+                if pct >= MIN_FIVE_STAR_PCT:
+                    label = pos_labels.get(top_pos, top_pos)
+                    label_lc = label.lower() if isinstance(label, str) else top_pos
+                    findings.append(
+                        f"{pct}% of 5-star reviews mention {label_lc} "
+                        f"— the strongest loyalty signal"
+                    )
+
+    return findings[:3]
+
+
 def run_full_analysis(
     play_reviews: list[dict],
     ios_reviews: list[dict],
@@ -259,7 +344,7 @@ def run_full_analysis(
     play_power = find_power_quotes(all_reviews, "Google Play") if play_agg else []
     ios_power = find_power_quotes(all_reviews, "App Store") if ios_agg else []
 
-    return {
+    result = {
         "taxonomy": {
             "name": taxonomy.get("name"),
             "label": taxonomy.get("label"),
@@ -285,3 +370,13 @@ def run_full_analysis(
             "non_english_total": sum(1 for r in all_reviews if r.get("is_non_english")),
         },
     }
+
+    # Top findings — computed last so it can read from the full result. Uses a
+    # conservative algorithm that returns 0-3 findings (never invented). The
+    # _app_name field gets injected by run_pipeline.py before this; if missing,
+    # fall back to a neutral placeholder so the finding strings still read OK.
+    app_name = play_metadata.get("title") if play_metadata else None
+    app_name = app_name or (ios_metadata.get("title") if ios_metadata else None) or "this app"
+    result["top_findings"] = compute_top_findings(result, app_name)
+
+    return result

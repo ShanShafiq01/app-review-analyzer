@@ -119,6 +119,7 @@ def run_pipeline(
         "user_message": "",
         "play_count": 0,
         "ios_count": 0,
+        "top_findings": [],
     }
 
     output_dir = Path(output_dir)
@@ -318,28 +319,47 @@ def run_pipeline(
     if primary_html and primary_html.exists():
         result["primary_output"] = str(primary_html.resolve())
 
-    # Build the user message
-    msg_parts = [f"\n✓ Analysis complete for {app_display_name}"]
-    msg_parts.append(f"  Reviews analyzed: {result['play_count']} Play + {result['ios_count']} App Store = {result['play_count'] + result['ios_count']} total")
+    # Surface top_findings on the result dict. Claude reads these structured
+    # findings from the result dict and lifts them verbatim into its chat reply
+    # (per the literal mockups in SKILL.md). Data-grounded, never invented.
+    # May be an empty list for small apps with no clear patterns — that's fine,
+    # SKILL.md tells Claude to omit the findings block in that case.
+    result["top_findings"] = data.get("top_findings", [])
+
+    # ────────────────── Build the user message ──────────────────
+    # Format matches the literal mockup in SKILL.md so Claude can lift it
+    # directly into chat. Four-part structure (v0.4.0):
+    #   1. Result headline      — concrete numbers, what happened
+    #   2. Top findings         — only if compute_top_findings returned >=1
+    #   3. File affordance      — single copy-friendly open command
+    #   4. (Optional next step) — handled by Claude in chat, not in user_message
+    total_count = result["play_count"] + result["ios_count"]
+    msg_parts = [
+        f"\n✓ Pulled {result['play_count']} Play Store + {result['ios_count']} App Store "
+        f"reviews for {app_display_name} ({total_count} total)."
+    ]
+
+    if result["top_findings"]:
+        msg_parts.append("\nTop findings:")
+        for finding in result["top_findings"]:
+            msg_parts.append(f"  • {finding}")
+
     if result["warnings"]:
-        msg_parts.append(f"\n⚠ Notes:")
+        msg_parts.append("\nNotes:")
         for w in result["warnings"]:
             msg_parts.append(f"  - {w}")
-    if generated:
-        msg_parts.append(f"\nFiles generated in {output_dir}:")
-        for fmt, files in generated.items():
-            for f in files:
-                msg_parts.append(f"  [{fmt}] {Path(f).name}")
 
-    # Surface a single copy-friendly command. Filenames-as-links don't actually
-    # work in many chat clients (claude.ai web blocks file://, VSCode chat opens
-    # HTML as source, terminals can't navigate file paths). This command can be
-    # copy-pasted into a terminal in any context. Once the HTML is open, its
-    # Downloads section has working <a download> links for xlsx/csv/json/md, so
-    # the user has one-click access to every other file without going back to chat.
+    if generated:
+        msg_parts.append(f"\nFiles generated in {output_dir}")
+
+    # File affordance: single copy-friendly open command. Filenames-as-text in
+    # chat don't actually open files in any context (claude.ai web blocks
+    # file:// from https origin; VSCode chat opens HTML as source; terminals
+    # can't navigate paths). The open command works everywhere. Once the HTML
+    # is open, its Downloads section gives one-click access to xlsx/csv/json/md.
     if primary_html and primary_html.exists():
         opener = "open" if sys.platform == "darwin" else ("start" if sys.platform == "win32" else "xdg-open")
-        msg_parts.append(f"\nIf the report didn't open automatically, run:")
+        msg_parts.append(f"\nThe executive summary should have opened in your browser. If not, run:")
         msg_parts.append(f"  {opener} {primary_html.resolve()}")
 
     result["user_message"] = "\n".join(msg_parts)
