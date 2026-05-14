@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.4.0
+version: 0.4.1
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -108,10 +108,10 @@ In this channel, files in `/mnt/user-data/outputs/<app_slug>/` are surfaced as o
 3. Write your reply using this literal pattern (substitute the bold sections with real data from `result`):
 
 ```markdown
-✓ Pulled **234 Play Store + 196 App Store** reviews for **Duolingo** (430 total).
+✓ Pulled **234 Play Store + 196 App Store** reviews for **Acme Notes** (430 total).
 
 **Top findings:**
-• **iOS users rate Duolingo +0.45★ higher than Android (4.7 vs 4.25)**
+• **iOS users rate Acme Notes +0.45★ higher than Android (4.7 vs 4.25)**
 • **62 reviews name subscription friction — the #1 complaint across both stores**
 • **47% of 5-star reviews mention streak — the strongest loyalty signal**
 
@@ -119,12 +119,14 @@ In this channel, files in `/mnt/user-data/outputs/<app_slug>/` are surfaced as o
   • **executive_summary.html** — start here, has the charts and verbatim quotes
   • **playstore_deepdive.html** — Android-only thematic breakdown
   • **appstore_deepdive.html** — iOS-only thematic breakdown
-  • **duolingo_reviews.xlsx** — 5-sheet analyst workbook
+  • **acme_notes_reviews.xlsx** — 5-sheet analyst workbook
   • **all_reviews.csv** — combined raw export
 
 Want a different angle? I can re-run with a specific country, focus on a date
 range, or compare against a competitor.
 ```
+
+(`Acme Notes` is a placeholder name used in these examples — substitute the real app you analyzed.)
 
 If `present_files()` fails or wasn't called (sandbox issue), use Pattern 3 instead.
 
@@ -133,10 +135,10 @@ If `present_files()` fails or wasn't called (sandbox issue), use Pattern 3 inste
 In this channel, the pipeline already auto-opened the executive summary in the user's default browser, and the HTML itself has a working Downloads section. Your job is to orient them, not duplicate the file list. Write your reply using this literal pattern:
 
 ```markdown
-✓ Pulled **234 Play Store + 196 App Store** reviews for **Duolingo** (430 total).
+✓ Pulled **234 Play Store + 196 App Store** reviews for **Acme Notes** (430 total).
 
 **Top findings:**
-• **iOS users rate Duolingo +0.45★ higher than Android (4.7 vs 4.25)**
+• **iOS users rate Acme Notes +0.45★ higher than Android (4.7 vs 4.25)**
 • **62 reviews name subscription friction — the #1 complaint across both stores**
 • **47% of 5-star reviews mention streak — the strongest loyalty signal**
 
@@ -147,7 +149,7 @@ and raw JSON.
 If your browser didn't open, copy and run this:
 
 \`\`\`
-open /Users/you/output/duolingo/executive_summary.html
+open /Users/you/output/acme-notes/executive_summary.html
 \`\`\`
 
 Want a different angle? I can re-run with a specific country, focus on a date
@@ -161,15 +163,15 @@ The fenced `open` block gets a copy button in every chat client. Use `open` on m
 Use this only if Pattern 1's `present_files()` failed AND you can't reach a browser:
 
 ```markdown
-✓ Pulled **234 Play Store + 196 App Store** reviews for **Duolingo** (430 total).
+✓ Pulled **234 Play Store + 196 App Store** reviews for **Acme Notes** (430 total).
 
 **Top findings:**
-• **iOS users rate Duolingo +0.45★ higher than Android (4.7 vs 4.25)**
+• **iOS users rate Acme Notes +0.45★ higher than Android (4.7 vs 4.25)**
 • **62 reviews name subscription friction — the #1 complaint across both stores**
 • **47% of 5-star reviews mention streak — the strongest loyalty signal**
 
 ⚠ I generated the files but couldn't attach or open them. They're at:
-`/path/to/output/duolingo/`
+`/path/to/output/acme-notes/`
 
 Re-run if you need them as clickable downloads.
 ```
@@ -186,7 +188,7 @@ Re-run if you need them as clickable downloads.
 
 > "⚠ Apple was rate-limiting heavily — Play Store data only. Re-run in 30 minutes for the full cross-store report.
 >
-> ✓ Pulled 234 Play Store reviews for Duolingo..."
+> ✓ Pulled 234 Play Store reviews for Acme Notes..."
 
 **On failure (success=False):** show the `user_message` to the user. Common failure modes:
 

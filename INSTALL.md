@@ -24,7 +24,7 @@ For anyone using claude.ai in a browser. Zero command-line. ~60 seconds end-to-e
 
 3. **Click** the **Upload skill** button → drop the `.skill` file into the upload area.
 
-4. **Done.** In any chat: *"Analyze reviews for Duolingo on both stores"* — Claude runs the skill, generates the reports, and presents them with one-click download buttons.
+4. **Done.** In any chat: *"Analyze reviews for &lt;app name&gt; on both stores"* — Claude runs the skill, generates the reports, and presents them with one-click download buttons.
 
 Why this option exists: every other option requires a terminal. This one doesn't. If you've never opened Terminal/PowerShell/CMD, choose this.
 
@@ -42,7 +42,7 @@ git clone https://github.com/ShanShafiq01/app-review-analyzer.git ~/.claude/skil
 
 The setup script: picks Python 3.10+ automatically, creates `.venv`, installs core deps, optionally installs Playwright (~150MB Chromium for PDF), optionally installs Anthropic SDK, runs a smoke test.
 
-After setup, Claude Code auto-detects the skill. Try: *"Analyze reviews for Duolingo on both stores"*.
+After setup, Claude Code auto-detects the skill. Try: *"Analyze reviews for &lt;app name&gt; on both stores"*.
 
 **If Python isn't installed:** `brew install python@3.13` (or download from [python.org](https://www.python.org/downloads/macos/)). Apple Silicon Macs need the arm64/universal2 build — the installer refuses to proceed with an x86_64 Python.
 

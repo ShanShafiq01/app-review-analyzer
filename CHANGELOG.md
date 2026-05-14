@@ -2,6 +2,36 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.1] — 2026-05-14
+
+**Hotfix: neutral example names in user-facing docs.** v0.4.0 shipped with "Duolingo" as the example app name in the SKILL.md presentation mockups, README/INSTALL "try this" prompts, and one CHANGELOG line. This contradicts the v0.3.1 decision to use generic placeholders throughout user-facing docs — *"sidesteps any 'is this app endorsed by us?' misperception when readers scan the repo for the first time."*
+
+### Fixed
+
+- **SKILL.md presentation mockups** (Patterns 1, 2, 3 + partial-success example): `Duolingo` → `Acme Notes` (clearly fictional, reads naturally in the mockup, no real-app endorsement). Filenames and output paths follow: `duolingo_reviews.xlsx` → `acme_notes_reviews.xlsx`, `/path/to/output/duolingo/` → `/path/to/output/acme-notes/`.
+- **README.md and INSTALL.md "try this" examples** in Option A and Option B: `Analyze reviews for Duolingo` → `Analyze reviews for <app name>` — using the bracket-placeholder convention so it's obvious the user substitutes their own app.
+- **CHANGELOG.md v0.4.0 user_message format example**: same substitution.
+- **references/known_limits.md scrape-time note**: removed the Duolingo name, replaced with "a large app (tens of millions of users)".
+
+### Preserved (historical record)
+
+CHANGELOG.md v0.3.0 entries describing the actual UTF-8 testing against real Duolingo data still mention Duolingo. The CHANGELOG is a factual log of what was tested, per the v0.3.1 carve-out: *"CHANGELOG.md is unchanged — it remains a factual record of what was tested."*
+
+### Why this matters
+
+For a public Claude skill, naming a specific real app in mockups creates the wrong first impression — readers can mistake it for an endorsed integration or a built-in target. Generic placeholders (or clearly fictional names like "Acme Notes") make it unambiguous that the user is meant to substitute their own app.
+
+### Update path for existing users
+
+```bash
+# Claude Code
+cd ~/.claude/skills/app-review-analyzer && git pull
+```
+
+No installer re-run needed — this is a docs-only patch. If you uploaded the v0.4.0 `.skill` zip to claude.ai, re-download v0.4.1 and re-upload to refresh the SKILL.md mockups.
+
+---
+
 ## [0.4.0] — 2026-05-14
 
 **Onboarding rewrite.** Every audience gets a first-class install path, and the chat reply Claude produces after a run finally feels designed instead of patched.
@@ -28,7 +58,7 @@ The pipeline now surfaces `result["top_findings"]` on the result dict so Claude 
 
 `scripts/run_pipeline.py` reshapes the post-run `user_message` to:
 
-1. **Result line** — concrete numbers ("Pulled 234 + 196 reviews for Duolingo (430 total)")
+1. **Result line** — concrete numbers ("Pulled 234 + 196 reviews for &lt;app name&gt; (430 total)")
 2. **Top findings** — lifted verbatim from `top_findings` (omitted if the list is empty)
 3. **File affordance** — a single copy-friendly `open <path>` command
 4. (Next-step suggestion — Claude adds this in chat, not in the message itself)

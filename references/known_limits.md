@@ -48,7 +48,7 @@ We pull from multiple `(country, language)` combos and dedupe by `reviewId`. Sam
 
 ### Slow for popular apps
 
-Pulling all reviews for Duolingo (~12 million users) can take 3-5 minutes. The library makes many paginated calls under the hood. The skill prints progress to stderr so you know it's still working.
+Pulling all reviews for a large app (tens of millions of users) can take 3-5 minutes. The library makes many paginated calls under the hood. The skill prints progress to stderr so you know it's still working.
 
 ### Some apps have "review history" disabled
 

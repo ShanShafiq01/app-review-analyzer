@@ -77,7 +77,7 @@ Five options. Each is one self-contained block — copy, paste, hit Enter.
 1. Download `app-review-analyzer-v0.3.5.skill` from the [latest Release](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest)
 2. Open [claude.ai](https://claude.ai) → click your name → **Settings** → **Capabilities** → **Skills**
 3. Click **Upload skill** → drop the `.skill` file in
-4. Done. In any chat, try: *"Analyze reviews for Duolingo on both stores"*
+4. Done. In any chat, try: *"Analyze reviews for &lt;app name&gt; on both stores"*
 
 ### Option B — macOS (bash or zsh)
 
