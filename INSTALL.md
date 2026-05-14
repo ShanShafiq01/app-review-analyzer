@@ -99,7 +99,7 @@ For users on claude.ai (the web/mobile interface).
 
 4. The skill appears in your skills list. Use it by mentioning what it does:
 
-   > "Analyze reviews for Duolingo on both stores"
+   > "Analyze reviews for &lt;app name&gt; on both stores"
 
 **Note:** claude.ai runs scripts in a sandbox. The skill works because all scrapers use only Python standard library + `requests` and `google-play-scraper` (both available in the sandbox). PDF generation via Playwright doesn't work in claude.ai's sandbox — use HTML, or PDF won't be in your output.
 
@@ -118,12 +118,12 @@ python install.py
 ./setup.sh       # macOS / Linux
 .\setup.ps1      # Windows PowerShell
 
-# Run directly
+# Run directly (replace with your target app's Play package + App Store ID)
 python -m scripts.run_pipeline \
-  --play com.duolingo \
-  --appstore 570060128 \
+  --play com.example.app \
+  --appstore 1234567890 \
   --formats html,excel,csv \
-  --output ./output/duolingo
+  --output ./output/myapp
 ```
 
 This is the closest thing to "AppFollow without the subscription".
@@ -133,13 +133,16 @@ This is the closest thing to "AppFollow without the subscription".
 `install.py` accepts flags so it works in CI / Dockerfiles / scripts:
 
 ```bash
-python install.py --yes                  # accept all defaults, install playwright
-python install.py --yes --no-playwright  # skip Chromium download (smaller)
-python install.py --yes --with-anthropic # also install LLM tagging SDK
-python install.py --no-venv              # install into the current env (no venv created)
-python install.py --no-venv --user       # pip install --user (for PEP 668 systems without a venv)
-python install.py --venv .env            # custom venv directory
+python install.py --yes                                # everything (core + playwright + anthropic)
+python install.py --yes --no-playwright                # skip the ~150MB Chromium fetch
+python install.py --yes --no-anthropic                 # skip the anthropic SDK
+python install.py --yes --no-playwright --no-anthropic # core deps only (lean)
+python install.py --no-venv                            # install into the current env (no venv created)
+python install.py --no-venv --user                     # pip install --user (for PEP 668 systems)
+python install.py --venv .env                          # custom venv directory
 ```
+
+Optional deps default to **Y** in the interactive prompts and **install** in `--yes` mode — you get full functionality (PDF output and LLM-powered tagging) out of the box. Pass `--no-playwright` / `--no-anthropic` to skip them for a lean install. Anthropic still requires `ANTHROPIC_API_KEY` at runtime to actually use `--llm-tagging`; installing the SDK alone has no side effects.
 
 ## Prerequisites
 

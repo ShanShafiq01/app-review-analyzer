@@ -13,8 +13,9 @@ cd app-review-analyzer
 Then run the smoke test:
 
 ```bash
+# Replace com.example.app with any real Play Store package name you want to test against
 python -m scripts.run_pipeline \
-  --play com.duolingo \
+  --play com.example.app \
   --countries us \
   --themes general \
   --formats html,csv \
@@ -39,7 +40,7 @@ Open `/tmp/smoke_test/playstore_deepdive.html` in a browser and confirm it rende
 
 5. **Sentiment scoring per theme.** Right now we count theme mentions. A theme appearing 20 times might be 15 angry mentions and 5 calm ones — knowing that would help.
 
-6. **Performance.** The Play Store scraper is slow for popular apps (Duolingo takes 3+ minutes). Better deduplication, less redundant querying, or caching across runs would help.
+6. **Performance.** The Play Store scraper is slow for popular apps (large apps with hundreds of thousands of reviews can take 3+ minutes). Better deduplication, less redundant querying, or caching across runs would help.
 
 **Bigger projects:**
 

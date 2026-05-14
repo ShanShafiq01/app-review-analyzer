@@ -59,25 +59,25 @@ The skill accepts the app in any of these forms:
 ### Play Store
 
 ```
-com.duolingo                                              ← package name
-https://play.google.com/store/apps/details?id=com.duolingo ← full URL
+com.example.app                                            ← package name
+https://play.google.com/store/apps/details?id=com.example.app ← full URL
 https://play.google.com/store/apps/details?id=com.x&hl=en  ← URL with extra params
 ```
 
 ### App Store
 
 ```
-570060128                                                  ← numeric ID
-https://apps.apple.com/us/app/duolingo/id570060128         ← full URL
-https://apps.apple.com/gb/app/duolingo/id570060128?at=...  ← URL with tracking
+1234567890                                                 ← numeric ID
+https://apps.apple.com/us/app/your-app/id1234567890        ← full URL
+https://apps.apple.com/gb/app/your-app/id1234567890?at=... ← URL with tracking
 ```
 
 ### App name only
 
 ```
-"Duolingo"
-"the Calm meditation app"
-"that fertility tracker called Proov"
+"Your App Name"
+"the <category> app called <name>"
+"that fertility tracker called <name>"
 ```
 
 Claude does a web search to find both store URLs, extracts IDs, and confirms with the user if there's ambiguity.

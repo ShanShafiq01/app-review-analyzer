@@ -9,9 +9,9 @@ Run a full competitive review analysis on a mobile app. Output goes to `./output
 ## Usage
 
 ```
-/review-analyze https://apps.apple.com/us/app/calm/id571800810
-/review-analyze com.duolingo
-/review-analyze Notion
+/review-analyze https://apps.apple.com/us/app/your-app/id1234567890
+/review-analyze com.example.app
+/review-analyze "Your App Name"
 ```
 
 ## Workflow
@@ -49,9 +49,9 @@ When invoked, follow the App Review Analyzer skill workflow:
 ## Examples
 
 ```
-You: /review-analyze https://apps.apple.com/us/app/calm/id571800810
+You: /review-analyze https://apps.apple.com/us/app/your-app/id1234567890
 
-Claude: I'll analyze Calm — Meditation & Sleep. Both stores, default formats? [Y/n]
+Claude: I'll analyze <Your App>. Both stores, default formats? [Y/n]
 
 You: y
 
@@ -61,7 +61,7 @@ Done! 196 App Store + 234 Play Store reviews analyzed.
 
 Top three findings:
   1. Subscription friction is the #1 complaint on both stores (28% of negative reviews)
-  2. Sleep stories drive 42% of 5-star praise
+  2. Top positive theme: <feature name> (42% of 5-star praise)
   3. iOS users rate 0.32★ higher than Android
 
 [presents 3 HTML files + Excel + CSVs]

@@ -2,6 +2,21 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1] — 2026-05-14
+
+Polish release on top of v0.3.0.
+
+### Changed
+
+- **Generic example placeholders throughout user-facing docs.** Installer output, README, INSTALL.md, slash command examples, run_pipeline help text, WORKFLOW.md URL parsing examples, and references/* worked examples now use `com.example.app` / `1234567890` / "Your App" placeholders instead of naming a specific real-world app. Sidesteps any "is this app endorsed by us?" misperception when readers scan the repo for the first time. CHANGELOG.md is unchanged — it remains a factual record of what was tested.
+- **Optional dependencies install by default.** Playwright (PDF output) and the Anthropic SDK (LLM-powered tagging) both default to `Y` in the interactive prompts and to **install** in `--yes` mode. Reflects that this skill ships all features and most users will want them. Pass `--no-playwright` / `--no-anthropic` for a lean install. Anthropic still requires `ANTHROPIC_API_KEY` at runtime to actually use `--llm-tagging` — installing the SDK alone has no side effects.
+
+### Added
+
+- `--no-anthropic` flag on `install.py` for symmetry with `--no-playwright`.
+
+---
+
 ## [0.3.0] — 2026-05-14
 
 Cross-platform release. The skill now works on Windows and Linux, not just macOS.

@@ -6,23 +6,23 @@ Fully-worked invocations from start to finish. Run any of these and you'll get a
 
 ```bash
 python -m scripts.run_pipeline \
-  --play com.duolingo \
-  --appstore 570060128 \
+  --play com.example.app \
+  --appstore 1234567890 \
   --countries us,gb,ca,au \
   --themes general \
   --formats html,excel,csv \
-  --output ./output/duolingo \
-  --app-display-name "Duolingo"
+  --output ./output/myapp \
+  --app-display-name "Your App"
 ```
 
 Generates:
 - `executive_summary.html`
 - `playstore_deepdive.html`
 - `appstore_deepdive.html`
-- `duolingo_reviews.xlsx`
+- `myapp_reviews.xlsx`
 - `playstore_reviews.csv`, `appstore_reviews.csv`, `all_reviews.csv`
 
-Time: 2-4 minutes (Duolingo has lots of reviews).
+Time: 2-4 minutes for apps with large review counts.
 
 ## 2. Health app with vertical-specific taxonomy
 
@@ -176,12 +176,12 @@ Claude will:
 
 ```bash
 # Top-level keys
-python -c "import json; d=json.load(open('./output/duolingo/full_analysis.json')); print(list(d.keys()))"
+python -c "import json; d=json.load(open('./output/myapp/full_analysis.json')); print(list(d.keys()))"
 
 # Theme counts on Play Store
 python -c "
 import json
-d = json.load(open('./output/duolingo/full_analysis.json'))
+d = json.load(open('./output/myapp/full_analysis.json'))
 for k, v in sorted(d['play']['neg_counts'].items(), key=lambda x: -x[1])[:5]:
     print(f'{v:4d}  {k}')
 "

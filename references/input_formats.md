@@ -7,10 +7,9 @@ How to specify which app to analyze. The skill accepts three forms.
 The `id=` parameter from any Play Store URL:
 
 ```
-com.proov
-com.duolingo
-com.notion.id
-com.calm.android
+com.example.app
+com.example.notes
+com.yourcompany.yourapp
 ```
 
 Pass it as `--play <package_name>`.
@@ -20,9 +19,9 @@ Pass it as `--play <package_name>`.
 The number after `/id` in any App Store URL:
 
 ```
-1574349479    (Proov)
-571800810     (Calm)
-570060128     (Duolingo)
+1234567890
+9876543210
+1112223334
 ```
 
 Pass it as `--appstore <id>`.

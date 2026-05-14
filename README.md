@@ -71,21 +71,21 @@ cd ~/.claude/skills/app-review-analyzer
 ./setup.sh
 ```
 
-Then in Claude Code: `Analyze reviews for Duolingo`
+Then in Claude Code: `Analyze reviews for <app name on both stores>`
 
 ### Or as a Claude Code slash command
 
 ```
-/review-analyze https://apps.apple.com/us/app/calm/id571800810
+/review-analyze https://apps.apple.com/us/app/your-app/id1234567890
 ```
 
 ### Or standalone
 
 ```bash
 python -m scripts.run_pipeline \
-  --play com.duolingo --appstore 570060128 \
+  --play com.example.app --appstore 1234567890 \
   --formats html,pdf,excel,csv,markdown,json \
-  --output ./output/duolingo
+  --output ./output/myapp
 ```
 
 ## Production hardening (what's different about v0.2)

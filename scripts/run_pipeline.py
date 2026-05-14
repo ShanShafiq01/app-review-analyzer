@@ -322,10 +322,10 @@ def main():
         epilog="""
 Examples:
   # Both stores with default formats (HTML + Excel + CSV)
-  python -m scripts.run_pipeline --play com.duolingo --appstore 570060128
+  python -m scripts.run_pipeline --play com.example.app --appstore 1234567890
 
   # Health/wellness taxonomy, all formats
-  python -m scripts.run_pipeline --play com.calm.android --appstore 571800810 \\
+  python -m scripts.run_pipeline --play com.example.healthapp --appstore 1234567890 \\
       --themes health_wellness --formats html,pdf,excel,csv,markdown,json
 
   # URLs work directly

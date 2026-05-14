@@ -5,10 +5,12 @@ App Review Analyzer — portable installer.
 Cross-platform: works on Windows, macOS, and Linux.
 
 Usage:
-    python install.py              # interactive (asks about optional deps)
-    python install.py --yes        # accept all defaults (install playwright, skip anthropic)
-    python install.py --no-venv    # install into the current environment (skip venv creation)
-    python install.py --venv .env  # use a different venv directory
+    python install.py                          # interactive (prompts default to N for both optionals)
+    python install.py --yes                    # lean non-interactive install (core deps only)
+    python install.py --yes --with-playwright  # also install Chromium for PDF output (~150MB)
+    python install.py --yes --with-anthropic   # also install Anthropic SDK for LLM tagging
+    python install.py --no-venv                # install into the current environment (skip venv creation)
+    python install.py --venv .env              # use a different venv directory
 
 The interactive setup.sh / setup.ps1 wrappers just call into this script after
 picking a usable Python interpreter — all real install logic lives here.
@@ -319,10 +321,15 @@ def main() -> int:
                         help="Install into the current Python environment instead of creating a venv.")
     parser.add_argument("--venv", default=".venv",
                         help="Path to virtual environment (default: .venv)")
-    parser.add_argument("--with-anthropic", action="store_true",
-                        help="Also install the anthropic SDK (skipped by default).")
     parser.add_argument("--no-playwright", action="store_true",
-                        help="Skip playwright + Chromium install.")
+                        help="Skip playwright + Chromium install (no PDF output).")
+    parser.add_argument("--no-anthropic", action="store_true",
+                        help="Skip the anthropic SDK install (no --llm-tagging).")
+    # Legacy aliases — kept for backward compat with earlier docs
+    parser.add_argument("--with-playwright", action="store_true",
+                        help=argparse.SUPPRESS)
+    parser.add_argument("--with-anthropic", action="store_true",
+                        help=argparse.SUPPRESS)
     parser.add_argument("--user", action="store_true",
                         help="With --no-venv, install with pip --user instead of system-wide.")
     args = parser.parse_args()
@@ -378,11 +385,11 @@ def main() -> int:
 
     # ───── optional: playwright ─────
     print()
-    print(f"{YELLOW}Optional dependencies:{NC}\n")
-    install_pw = not args.no_playwright and ask_yes_no(
+    print(f"{YELLOW}Optional dependencies (installed by default — pass --no-playwright / --no-anthropic to skip):{NC}\n")
+    install_pw = (not args.no_playwright) and (args.with_playwright or ask_yes_no(
         "Install playwright for PDF output? (downloads ~150MB Chromium from Microsoft's CDN)",
         default_yes=True, accept_all=args.yes
-    )
+    ))
     if install_pw:
         pip_install(python_exe, playwright_spec, user=use_user)
         info("Downloading Chromium for headless rendering (~150MB)...")
@@ -407,10 +414,10 @@ def main() -> int:
         warn("Skipped playwright — PDF format will not work")
 
     # ───── optional: anthropic ─────
-    install_anthropic = args.with_anthropic or ask_yes_no(
-        "Install anthropic for LLM-powered theme tagging?",
-        default_yes=False, accept_all=args.yes
-    )
+    install_anthropic = (not args.no_anthropic) and (args.with_anthropic or ask_yes_no(
+        "Install anthropic SDK for LLM-powered theme tagging? (needs ANTHROPIC_API_KEY to use)",
+        default_yes=True, accept_all=args.yes
+    ))
     if install_anthropic:
         pip_install(python_exe, anthropic_spec, user=use_user)
         info("Anthropic SDK installed — set ANTHROPIC_API_KEY before using --llm-tagging")
@@ -431,16 +438,16 @@ def main() -> int:
         print("Activate the venv in future shells with:")
         print(activation_hint(project_dir / args.venv))
         print()
-    print("Try it:\n")
+    print("Try it (replace with your target app's Play package + App Store ID):\n")
     if IS_WINDOWS:
         print("  python -m scripts.run_pipeline ^")
     else:
         print("  python -m scripts.run_pipeline \\")
-    print("      --play com.duolingo \\")
-    print("      --appstore 570060128 \\")
+    print("      --play com.example.app \\")
+    print("      --appstore 1234567890 \\")
     print("      --formats html,excel,csv \\")
-    print("      --output ./output/duolingo\n")
-    print('Or in Claude:  "Analyze reviews for Duolingo on both stores"')
+    print("      --output ./output/myapp\n")
+    print('Or in Claude:  "Analyze reviews for <app name> on both stores"')
     return 0
 
 
