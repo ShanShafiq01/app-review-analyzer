@@ -2,6 +2,35 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] — 2026-05-14
+
+Cross-platform release. The skill now works on Windows and Linux, not just macOS.
+
+### Added
+
+- **Windows support.** New `setup.ps1` PowerShell installer picks a usable Python via the `py` launcher and delegates to `install.py`. Refuses x86/x64 Python on Windows-on-ARM hosts to prevent the same broken-toolchain failure mode the Apple Silicon check already prevents.
+- **Portable `install.py`.** Pure-Python installer that works on Windows, macOS, and Linux. Handles venv creation with health-check (refuses to reuse a broken `.venv/` left behind by an older Python), PEP 668 externally-managed Pythons (Debian, Homebrew) via `--user` flag, and skips `playwright install --with-deps` on non-Linux or non-interactive shells to avoid hangs on sudo prompts. Accepts `--yes`, `--no-venv`, `--with-anthropic`, `--no-playwright`, `--user`, and `--venv DIR` flags for CI use.
+- **Trust & supply chain section in INSTALL.md.** Documents what the installer downloads and trusts: four pinned core deps from PyPI, opt-in Playwright Chromium binary from Microsoft's CDN, and an explicit guarantee that nothing runs `curl | bash`, modifies shell profiles, or installs system-wide without consent.
+
+### Changed
+
+- **All 15 file I/O sites now declare `encoding="utf-8"`.** Previously every `Path.read_text()` / `write_text()` call relied on the platform default, which is `cp1252` on Windows — and would have raised `UnicodeDecodeError` on the first French, Japanese, German, or emoji-bearing review. Verified end-to-end on 1,500 real Duolingo reviews from FR/JP/DE: 1,333 contained non-ASCII text, all round-tripped correctly through every output format (HTML, CSV, Markdown, JSON).
+- **`run_pipeline.py` reconfigures stdout/stderr to UTF-8** at module load so `print()` of non-ASCII review text doesn't fail under `LC_ALL=C` or minimal-container locales.
+- **`setup.sh` rewritten as a thin wrapper around `install.py`.** Auto-picks Python 3.10+ matching the host architecture, refuses x86_64 Python on Apple Silicon (which was the actual blocker on the author's machine — pandas/numpy source builds failed because the linker couldn't bridge x86_64 to arm64), then delegates to install.py so install logic lives in one place.
+- **`requirements.txt` is the single source of truth for dependency versions.** `install.py` parses it at runtime. Playwright pinned to `>=1.40,<2.0` to bound which Chromium revision the optional install fetches.
+
+### Tested
+
+- macOS arm64 (Python 3.13): full pipeline end-to-end against Duolingo App Store FR/JP/DE — `appstore_deepdive.html` (106,133 non-ASCII chars), `all_reviews.csv` (52,592), `summary.md`, `_analysis.json` — all valid UTF-8, characters preserved.
+- All 12 fast unit + security tests pass post-fix.
+- Audited by three independent reviewers (code review, security, evidence-based reality check) before commit. Critical bug caught: `setup.ps1` was clobbering PowerShell's automatic `$args` variable — fixed by using `param([Parameter(ValueFromRemainingArguments=$true)]$UserArgs)`.
+
+### Honest scope of testing
+
+Linux and Windows have been code-reviewed and structurally portable but not executed. The `install.py` Windows path handles `Scripts\python.exe` and the PEP 668 detection covers Debian/Homebrew, but neither has been run on a real machine yet. File issues if you hit problems.
+
+---
+
 ## [0.2.1] — 2026-05-14
 
 Security audit release. See [SECURITY.md](./SECURITY.md) for the full audit.
