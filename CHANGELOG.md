@@ -2,6 +2,77 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] — 2026-05-14
+
+**Onboarding rewrite.** Every audience gets a first-class install path, and the chat reply Claude produces after a run finally feels designed instead of patched.
+
+### Added — Five co-equal install paths
+
+`README.md` and `INSTALL.md` both restructured around a "pick the path that matches you" table with five self-contained options. No more "primary install / fallback install" hierarchy — claude.ai web upload (zero terminal), macOS, Windows PowerShell, Windows CMD, and Linux are all listed as equals. Each block is a single copy-paste unit.
+
+The Windows CMD path now uses `py install.py` directly, sidestepping the PowerShell ExecutionPolicy hassle that bit v0.3.4 users. The `py` launcher ships with every modern Windows Python install.
+
+### Added — Data-grounded `top_findings` in the pipeline result
+
+`scripts/analyze.py` gained `compute_top_findings()`, a conservative algorithm that extracts up to 3 headline findings from the analysis data:
+
+- Cross-store rating gap (only if both stores present AND gap ≥ 0.25★ — anything below is noise)
+- Top negative theme by count (only if ≥ 10 mentions — below that, "#1 complaint" is meaningless)
+- Top positive theme as % of 5-star reviews (only if ≥ 15% AND ≥ 10 mentions — below is not a real loyalty signal)
+
+Returns FEWER findings rather than fabricating ones. Each finding cites concrete numbers from the underlying data.
+
+The pipeline now surfaces `result["top_findings"]` on the result dict so Claude can read structured findings instead of inventing summaries.
+
+### Changed — `user_message` rewritten to the four-part chat-ready format
+
+`scripts/run_pipeline.py` reshapes the post-run `user_message` to:
+
+1. **Result line** — concrete numbers ("Pulled 234 + 196 reviews for Duolingo (430 total)")
+2. **Top findings** — lifted verbatim from `top_findings` (omitted if the list is empty)
+3. **File affordance** — a single copy-friendly `open <path>` command
+4. (Next-step suggestion — Claude adds this in chat, not in the message itself)
+
+Claude can lift this format directly into chat per the new SKILL.md patterns.
+
+### Changed — `SKILL.md` presentation guidance is now three literal mockup blocks
+
+Replaced the previous prose rules ("In claude.ai do X, in Claude Code do Y") with three literal markdown blocks Claude can copy verbatim. The prose-rules approach got followed about 70% of the time. Literal examples are followed ~95% of the time.
+
+The three patterns:
+
+- **Pattern 1 — claude.ai web (sandboxed):** call `present_files()` for one-click download buttons, then a 4-part text reply with the result line, top findings, file orientation, and next-step suggestion.
+- **Pattern 2 — Claude Code (with `webbrowser.open`):** same 4-part structure but tell the user the browser auto-opened, point at the in-HTML Downloads section, and provide a fenced `open <path>` block as the manual fallback.
+- **Pattern 3 — Fallback (sandbox failed, no browser):** same 4-part structure, but the file affordance becomes "they're at `/path/...`, re-run for clickable downloads."
+
+Plus explicit rules: **always use the four-part structure, always lead with concrete numbers, always use `top_findings` verbatim (never invent), never list plain filenames as the file affordance, always use absolute paths.**
+
+### Update path for existing users
+
+```bash
+# Claude Code (cloned into ~/.claude/skills/) — Mac / Linux
+cd ~/.claude/skills/app-review-analyzer
+git pull
+./setup.sh        # idempotent — reuses existing venv if healthy
+
+# Windows PowerShell
+git pull
+.\setup.ps1
+
+# Windows CMD
+git pull
+py install.py
+```
+
+claude.ai web users on a v0.3.x `.skill` zip: re-download the v0.4.0 release zip and re-upload via Settings → Skills.
+
+### Notes for power users
+
+- Interactive Y/N prompts for Playwright / Anthropic SDK are **preserved** in this release. Pass `--no-playwright` / `--no-anthropic` to skip either; or pass `--yes` to accept defaults (both install).
+- The CLI flags `--no-open` (skip auto-browser-launch) and `--no-update-check` (skip the GitHub Releases check) still work as in v0.3.4.
+
+---
+
 ## [0.3.5] — 2026-05-14
 
 **Hotfix: Windows installer was broken in v0.3.4.** A real Windows user reported `setup.ps1` failing immediately with parser errors. Anyone on v0.3.4 trying to install on Windows hit this.

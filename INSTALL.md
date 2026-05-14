@@ -1,101 +1,133 @@
 # Installation
 
-Three ways to install, depending on where you'll use the skill.
+Pick the option that matches your setup. All five are first-class — no "primary" and "fallback." Each block is one self-contained copy-paste unit.
 
-## Platform support
+| Your situation | Go to |
+|---|---|
+| You use **claude.ai** in a browser (no terminal) | **Option A** |
+| You're on a **Mac** | **Option B** |
+| You're on **Windows + PowerShell** | **Option C** |
+| You're on **Windows + Command Prompt (CMD)** | **Option D** |
+| You're on **Linux** | **Option E** |
 
-| Platform | Recommended installer | Notes |
-|---|---|---|
-| macOS / Linux | `./setup.sh` | Picks Python 3.10+ automatically, creates `.venv` |
-| Windows (PowerShell) | `.\setup.ps1` | Same logic, picks Python via the `py` launcher |
-| Any OS (portable) | `python install.py` | Pure-Python installer — works everywhere |
-| claude.ai web | Upload `.skill` file | No local install needed; Anthropic runs the code |
+**Python 3.10 or later** is required for Options B-E. claude.ai web (Option A) runs everything Anthropic-side — no Python needed locally.
 
-**Python 3.10 or later** is required on all platforms (the code uses modern type hints and string features).
+---
 
-## Option 1 — Claude Code (slash command + skill)
+## Option A — claude.ai web upload (no terminal)
 
-For developers who use Claude Code on their machine.
+For anyone using claude.ai in a browser. Zero command-line. ~60 seconds end-to-end.
+
+1. **Download** the latest `.skill` package from [Releases](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest). It's a single ~130KB file named something like `app-review-analyzer-v0.3.5.skill`.
+
+2. **Open** [claude.ai](https://claude.ai) in your browser → click your name in the bottom-left → **Settings** → **Capabilities** → **Skills**.
+
+3. **Click** the **Upload skill** button → drop the `.skill` file into the upload area.
+
+4. **Done.** In any chat: *"Analyze reviews for Duolingo on both stores"* — Claude runs the skill, generates the reports, and presents them with one-click download buttons.
+
+Why this option exists: every other option requires a terminal. This one doesn't. If you've never opened Terminal/PowerShell/CMD, choose this.
+
+**Tradeoffs:** PDF generation doesn't work in claude.ai's sandbox (it requires Chromium). Use HTML or Excel output instead — they have all the same data plus interactive features.
+
+---
+
+## Option B — macOS (bash or zsh)
+
+One-line install. Clones into Claude Code's skills directory and runs the setup.
 
 ```bash
-# Clone into Claude Code's skills directory
-git clone https://github.com/ShanShafiq01/app-review-analyzer.git \
-  ~/.claude/skills/app-review-analyzer
-
-# Run setup (macOS / Linux)
-cd ~/.claude/skills/app-review-analyzer
-./setup.sh
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git ~/.claude/skills/app-review-analyzer && cd ~/.claude/skills/app-review-analyzer && ./setup.sh
 ```
 
-Windows (PowerShell):
+The setup script: picks Python 3.10+ automatically, creates `.venv`, installs core deps, optionally installs Playwright (~150MB Chromium for PDF), optionally installs Anthropic SDK, runs a smoke test.
+
+After setup, Claude Code auto-detects the skill. Try: *"Analyze reviews for Duolingo on both stores"*.
+
+**If Python isn't installed:** `brew install python@3.13` (or download from [python.org](https://www.python.org/downloads/macos/)). Apple Silicon Macs need the arm64/universal2 build — the installer refuses to proceed with an x86_64 Python.
+
+---
+
+## Option C — Windows PowerShell
 
 ```powershell
-git clone https://github.com/ShanShafiq01/app-review-analyzer.git `
-  $env:USERPROFILE\.claude\skills\app-review-analyzer
-
-cd $env:USERPROFILE\.claude\skills\app-review-analyzer
-.\setup.ps1
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git "$env:USERPROFILE\.claude\skills\app-review-analyzer"; cd "$env:USERPROFILE\.claude\skills\app-review-analyzer"; .\setup.ps1
 ```
 
-If PowerShell refuses to run the script (default execution policy blocks unsigned scripts), in order of recommendation:
+**If PowerShell blocks `setup.ps1`** with "running scripts is disabled":
 
 ```powershell
-# Safest — unblock just this file after reading it
-Unblock-File .\setup.ps1
-.\setup.ps1
-
-# Per-user execution policy (one-time, allows local scripts)
+# Option C1 — per-user execution policy (one-time, recommended)
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-.\setup.ps1
 
-# One-shot bypass — only use after reading the script you're about to run
+# Option C2 — unblock just this file (after reading it)
+Unblock-File .\setup.ps1
+
+# Option C3 — one-shot bypass
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
-Or skip the wrapper entirely:
+Or just use **Option D** (Command Prompt) instead — it bypasses PowerShell entirely.
 
-```powershell
-python install.py
+**If Python isn't installed:** `winget install Python.Python.3.13` from a fresh PowerShell, or download from [python.org](https://www.python.org/downloads/windows/). On Windows-on-ARM, install the ARM64 build (the installer refuses to proceed with an x64 Python under emulation).
+
+---
+
+## Option D — Windows Command Prompt (CMD)
+
+```cmd
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git "%USERPROFILE%\.claude\skills\app-review-analyzer" && cd "%USERPROFILE%\.claude\skills\app-review-analyzer" && py install.py
 ```
 
-The setup script:
-- Installs Python dependencies
-- Optionally installs Playwright + Chromium for PDF generation
-- Optionally installs the Anthropic SDK for LLM-powered tagging
-- Runs a smoke test
+This option **bypasses PowerShell entirely** by using the `py` launcher to run `install.py` directly. No ExecutionPolicy headaches. `install.py` is the same core installer that `setup.ps1` and `setup.sh` delegate to — so the end state is identical to Options B/C/E.
 
-After setup, Claude Code automatically picks up the skill. Try:
+**If `py` isn't found:** the Python launcher ships with every modern Windows Python install. Install Python from [python.org](https://www.python.org/downloads/windows/) and make sure "Add Python to PATH" is checked. Or use `python install.py` if `py` doesn't work.
 
-```
-You: Analyze reviews for Calm on both stores
-Claude: [Claude reads SKILL.md, asks one question about formats, runs the pipeline]
-```
+---
 
-### Optional — Claude Code slash command
+## Option E — Linux
 
-The skill ships with a `.claude/commands/review-analyze.md` file that registers `/review-analyze` as a slash command in Claude Code:
+Identical to Option B — same shell, same script:
 
-```
-/review-analyze https://apps.apple.com/us/app/calm/id571800810
+```bash
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git ~/.claude/skills/app-review-analyzer && cd ~/.claude/skills/app-review-analyzer && ./setup.sh
 ```
 
-This is a shortcut — the natural language version works exactly the same.
+Listed separately so Linux users don't bounce off "macOS" headings. The installer detects Linux and adjusts: Chromium install uses `--with-deps` only if running interactively (so CI / non-TTY runs don't hang on a sudo prompt). PEP 668 detection auto-fires on Debian/Ubuntu 23.04+ — pass `--no-venv --user` if you want to install into `~/.local` instead of a venv.
 
-## Option 2 — Claude.ai (manual upload)
+**If Python isn't installed:** `sudo apt install python3.13` (Ubuntu/Debian) or your distro equivalent.
 
-For users on claude.ai (the web/mobile interface).
+---
 
-1. Download the latest `.skill` package from [Releases](https://github.com/ShanShafiq01/app-review-analyzer/releases) — or build it yourself:
+## Claude Code slash command
 
-   ```bash
-   git clone https://github.com/ShanShafiq01/app-review-analyzer.git
-   cd app-review-analyzer
-   zip -r app-review-analyzer.skill . -x ".git/*" "*__pycache__*"
-   ```
+If you installed via Options B-E, the skill ships with a `.claude/commands/review-analyze.md` file that registers `/review-analyze` as a slash command in Claude Code:
 
-2. In claude.ai, go to **Settings → Capabilities → Skills**
+```
+/review-analyze https://apps.apple.com/us/app/your-app/id1234567890
+```
 
-3. Click **Upload skill** and select the `.skill` file
+This is a shortcut — the natural-language version (*"Analyze reviews for X"*) works exactly the same.
+
+---
+
+## Build the `.skill` zip yourself
+
+If you want to upload a version that isn't published yet, or rebuild from a specific commit:
+
+```bash
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git
+cd app-review-analyzer
+zip -r app-review-analyzer.skill . -x ".git/*" "*__pycache__*" "*.venv/*"
+```
+
+The resulting `app-review-analyzer.skill` is what you upload via Option A.
+
+---
+
+## After upload (Option A only)
+
+1. In claude.ai, go to **Settings → Capabilities → Skills**.
 
 4. The skill appears in your skills list. Use it by mentioning what it does:
 

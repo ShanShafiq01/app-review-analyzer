@@ -60,43 +60,54 @@ For any app on either store, in 60-180 seconds:
 
 When the run finishes interactively, the executive summary **auto-opens in your default browser**. Every HTML report ends with a **Downloads** section — clickable cards for every other artifact (xlsx, csv, json, markdown), with `download` attributes that trigger Save dialogs even when `file://` browser security would block direct navigation. No more "I see the filename in chat but clicking does nothing." (Auto-open is gated on TTY mode and disable-able with `--no-open`.)
 
-## Install
+## Install — pick the path that matches you
 
-See [INSTALL.md](./INSTALL.md) for all three paths. Quick version:
+Five options. Each is one self-contained block — copy, paste, hit Enter.
 
-### Claude Code (recommended)
+| Your situation | Go to |
+|---|---|
+| You use **claude.ai** in a browser (no terminal) | **Option A** |
+| You're on a **Mac** | **Option B** |
+| You're on **Windows + PowerShell** | **Option C** |
+| You're on **Windows + Command Prompt (CMD)** | **Option D** |
+| You're on **Linux** | **Option E** |
 
-Pick the command block for your OS — copy as one block, paste, hit Enter.
+### Option A — claude.ai web upload (zero terminal, recommended for non-developers)
 
-**macOS / Linux** (bash, zsh):
+1. Download `app-review-analyzer-v0.3.5.skill` from the [latest Release](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest)
+2. Open [claude.ai](https://claude.ai) → click your name → **Settings** → **Capabilities** → **Skills**
+3. Click **Upload skill** → drop the `.skill` file in
+4. Done. In any chat, try: *"Analyze reviews for Duolingo on both stores"*
+
+### Option B — macOS (bash or zsh)
+
 ```bash
-git clone https://github.com/ShanShafiq01/app-review-analyzer.git ~/.claude/skills/app-review-analyzer
-cd ~/.claude/skills/app-review-analyzer
-./setup.sh
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git ~/.claude/skills/app-review-analyzer && cd ~/.claude/skills/app-review-analyzer && ./setup.sh
 ```
 
-**Windows (PowerShell):**
+### Option C — Windows PowerShell
+
 ```powershell
-git clone https://github.com/ShanShafiq01/app-review-analyzer.git "$env:USERPROFILE\.claude\skills\app-review-analyzer"
-cd "$env:USERPROFILE\.claude\skills\app-review-analyzer"
-.\setup.ps1
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git "$env:USERPROFILE\.claude\skills\app-review-analyzer"; cd "$env:USERPROFILE\.claude\skills\app-review-analyzer"; .\setup.ps1
 ```
 
-If PowerShell refuses to run the script, see [INSTALL.md](./INSTALL.md#updating) for `-ExecutionPolicy` workarounds.
+If PowerShell blocks the script with "running scripts is disabled," run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` once, then re-try. Or use **Option D** instead — it bypasses PowerShell entirely.
 
-**Windows (CMD):**
+### Option D — Windows Command Prompt (CMD)
+
 ```cmd
-git clone https://github.com/ShanShafiq01/app-review-analyzer.git "%USERPROFILE%\.claude\skills\app-review-analyzer"
-cd "%USERPROFILE%\.claude\skills\app-review-analyzer"
-powershell -ExecutionPolicy Bypass -File .\setup.ps1
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git "%USERPROFILE%\.claude\skills\app-review-analyzer" && cd "%USERPROFILE%\.claude\skills\app-review-analyzer" && py install.py
 ```
 
-**Any OS (portable Python installer — works everywhere):**
+This bypasses PowerShell entirely — uses the `py` launcher to run `install.py` directly. No ExecutionPolicy headaches.
+
+### Option E — Linux
+
 ```bash
-git clone https://github.com/ShanShafiq01/app-review-analyzer.git
-cd app-review-analyzer
-python install.py
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git ~/.claude/skills/app-review-analyzer && cd ~/.claude/skills/app-review-analyzer && ./setup.sh
 ```
+
+Identical to Option B — same shell, same script. Just listed separately so Linux users don't bounce off "macOS" headings.
 
 Then in Claude Code: `Analyze reviews for <app name on both stores>`
 
