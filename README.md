@@ -66,18 +66,36 @@ See [INSTALL.md](./INSTALL.md) for all three paths. Quick version:
 
 ### Claude Code (recommended)
 
+Pick the command block for your OS — copy as one block, paste, hit Enter.
+
+**macOS / Linux** (bash, zsh):
 ```bash
-git clone https://github.com/ShanShafiq01/app-review-analyzer.git \
-  ~/.claude/skills/app-review-analyzer
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git ~/.claude/skills/app-review-analyzer
 cd ~/.claude/skills/app-review-analyzer
+./setup.sh
 ```
 
-Then run **one** of the installers — pick the one matching your OS:
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git "$env:USERPROFILE\.claude\skills\app-review-analyzer"
+cd "$env:USERPROFILE\.claude\skills\app-review-analyzer"
+.\setup.ps1
+```
 
-```text
-./setup.sh         # macOS / Linux
-.\setup.ps1        # Windows (PowerShell)
-python install.py  # any OS — portable Python installer
+If PowerShell refuses to run the script, see [INSTALL.md](./INSTALL.md#updating) for `-ExecutionPolicy` workarounds.
+
+**Windows (CMD):**
+```cmd
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git "%USERPROFILE%\.claude\skills\app-review-analyzer"
+cd "%USERPROFILE%\.claude\skills\app-review-analyzer"
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
+**Any OS (portable Python installer — works everywhere):**
+```bash
+git clone https://github.com/ShanShafiq01/app-review-analyzer.git
+cd app-review-analyzer
+python install.py
 ```
 
 Then in Claude Code: `Analyze reviews for <app name on both stores>`

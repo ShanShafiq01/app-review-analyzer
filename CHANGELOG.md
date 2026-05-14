@@ -2,6 +2,30 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.5] — 2026-05-14
+
+**Hotfix: Windows installer was broken in v0.3.4.** A real Windows user reported `setup.ps1` failing immediately with parser errors. Anyone on v0.3.4 trying to install on Windows hit this.
+
+### Fixed
+
+- **`setup.ps1` Windows encoding bug.** v0.3.4 shipped with em-dashes (`—`), arrows (`→`), and box-drawing characters in the PowerShell installer. PowerShell 5.1 (the default on Windows 10/11) reads `.ps1` files as the system codepage (typically Windows-1252) unless the file has a UTF-8 BOM. The multibyte UTF-8 characters got mojibaked into `â€"`-style garbage, which broke the parser and produced cascading "Expressions are only allowed as the first element of a pipeline" errors. Two-part fix: (a) rewrote the file using ASCII-only characters in the script body, (b) saved it with a UTF-8 BOM so PowerShell 5.1 reads it correctly even if anyone re-adds Unicode in the future.
+- **Single-quoted regex literals in `-split` calls.** Changed `-split "\|"` and `-split "\."` to `-split '\|'` and `-split '\.'`. Single-quoted strings don't go through PowerShell's string-escape pass, so the regex engine sees the patterns unambiguously. Robust against future PowerShell parser quirks.
+- **README install commands were Mac/Linux-only.** The Quick install block used bash `\` line-continuation and `~/.claude/skills/...` paths, neither of which work in Windows CMD or PowerShell. Replaced the single block with four explicit OS-specific blocks (macOS/Linux, Windows PowerShell, Windows CMD, portable). Each block is a single copy-paste unit that clones, cd's, and runs the installer in one go.
+
+### Update path for existing users
+
+```bash
+# Claude Code (cloned into ~/.claude/skills/)
+cd ~/.claude/skills/app-review-analyzer
+git pull
+./setup.sh        # Mac/Linux users: no behavior change
+.\setup.ps1       # Windows users: this is the fix
+```
+
+If you uploaded the v0.3.4 `.skill` zip to claude.ai, no action needed (Anthropic-side runtime doesn't use `setup.ps1`). The fix only affects users running the Windows installer locally.
+
+---
+
 ## [0.3.4] — 2026-05-14
 
 Bridges the "I clicked the filename in chat and nothing happened" gap. Three things ship together:
