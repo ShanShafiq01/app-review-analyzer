@@ -1,0 +1,51 @@
+{
+  "name": "social",
+  "label": "Social & Communication",
+  "description": "For social media, messaging, dating, community, and content-sharing apps. Adds vertical-specific themes on top of the general taxonomy.",
+  "version": "1.0",
+  "extends": "general",
+  "negative_themes": {
+    "moderation_failure": {
+      "label": "Moderation failures",
+      "keywords": ["bots", "spam accounts", "fake profile", "fake accounts", "scammers", "scammer", "harassment", "trolls", "hate speech", "abuse", "no moderation", "report did nothing"]
+    },
+    "wrongful_ban": {
+      "label": "Wrongful ban or account suspended",
+      "keywords": ["banned for no reason", "suspended my account", "shadowbanned", "shadow banned", "account suspended", "got banned", "no explanation", "appeal denied"]
+    },
+    "algorithm_complaints": {
+      "label": "Algorithm shows wrong content",
+      "keywords": ["algorithm", "feed is", "for you page", "for you feed", "don't see my friends", "dont see my friends", "doesn't show", "echo chamber", "rage bait"]
+    },
+    "privacy_creepy": {
+      "label": "Privacy / creepy feeling",
+      "keywords": ["listening to me", "creepy ads", "knew i was talking about", "stalking me", "shows my location", "location data", "doxxed"]
+    },
+    "ghost_messages": {
+      "label": "Messages not delivering",
+      "keywords": ["messages not sending", "not delivered", "stuck sending", "didn't receive my", "missed messages", "notifications late", "notifications missing"]
+    },
+    "matchmaking_quality": {
+      "label": "Match quality (dating)",
+      "keywords": ["no real people", "all bots", "no matches", "matches don't respond", "matches dont respond", "ghost", "ghosted", "catfish", "fake profiles"]
+    },
+    "premium_paywall": {
+      "label": "Premium / paywall frustration",
+      "keywords": ["premium only", "have to pay to", "behind paywall", "free version useless", "see who liked", "boost"]
+    }
+  },
+  "positive_themes": {
+    "real_connection": {
+      "label": "Made real connections",
+      "keywords": ["met my partner", "met my husband", "met my wife", "found love", "made friends", "real friends", "great community", "lifelong friend", "in real life"]
+    },
+    "stays_in_touch": {
+      "label": "Helps stay in touch",
+      "keywords": ["family far away", "long distance", "across the world", "stay connected", "see my grandkids", "see my niece", "stay in touch"]
+    },
+    "good_community": {
+      "label": "Supportive community",
+      "keywords": ["supportive", "kind community", "welcoming", "safe space", "found my people", "wholesome", "positive community"]
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "name": "health_wellness",
+  "label": "Health & Wellness",
+  "description": "For fertility, meditation, fitness, mental health, nutrition, sleep, and habit-tracking apps. Adds vertical-specific themes on top of the general taxonomy.",
+  "version": "1.0",
+  "extends": "general",
+  "negative_themes": {
+    "tracking_accuracy": {
+      "label": "Tracking accuracy & data quality",
+      "keywords": ["inaccurate", "not accurate", "wrong reading", "wrong result", "false reading", "doesn't match", "doesnt match", "step count is off", "calorie count wrong", "heart rate wrong", "doctor said", "blood test", "lab result"]
+    },
+    "data_loss": {
+      "label": "Lost data or progress",
+      "keywords": ["lost my data", "lost my progress", "lost everything", "lost months", "lost years", "deleted my", "wiped out", "starting over", "had to start over"]
+    },
+    "medical_concerns": {
+      "label": "Medical accuracy & safety concerns",
+      "keywords": ["dangerous", "unsafe", "misleading medical", "not a doctor", "asks too much", "medical advice", "diagnose", "diagnosis", "should see a doctor", "fda"]
+    },
+    "guilt_pressure": {
+      "label": "Makes users feel guilty or pressured",
+      "keywords": ["makes me feel bad", "guilty", "judgmental", "shame", "shaming", "pressure", "stressful", "stressed me out", "anxiety", "made me anxious", "toxic", "unhealthy"]
+    },
+    "ineffective": {
+      "label": "Doesn't deliver promised results",
+      "keywords": ["didn't work", "didnt work", "no results", "no progress", "tried for months", "false hope", "doesn't help me", "promises", "claimed to"]
+    },
+    "wearable_issues": {
+      "label": "Wearable / device sync issues",
+      "keywords": ["won't sync", "wont sync", "apple watch", "fitbit", "garmin", "doesn't connect", "sync issue", "lost connection", "stops tracking"]
+    }
+  },
+  "positive_themes": {
+    "life_changing": {
+      "label": "Genuine health outcome",
+      "keywords": ["pregnant", "conceived", "got pregnant", "rainbow baby", "lost weight", "lost pounds", "feel better", "no more pain", "off medication", "blood pressure dropped", "sleep better"]
+    },
+    "doctor_validated": {
+      "label": "Validated by professional or labs",
+      "keywords": ["doctor agreed", "doctor recommended", "doctor uses", "fertility specialist", "my therapist", "professional", "lab confirmed", "blood test confirmed", "validated"]
+    },
+    "habit_formed": {
+      "label": "Built a lasting habit",
+      "keywords": ["streak", "every day", "daily habit", "part of my routine", "first thing every morning", "60 days", "100 days", "consistent", "habit-forming"]
+    },
+    "mental_health": {
+      "label": "Mental health benefit",
+      "keywords": ["calmer", "less anxious", "less stressed", "more mindful", "centered", "grounded", "peace of mind", "mental clarity", "saved my mental"]
+    },
+    "self_knowledge": {
+      "label": "Self-understanding & awareness",
+      "keywords": ["understand my body", "know my cycle", "patterns i didn't see", "patterns i didnt see", "made me aware", "self awareness", "self-awareness", "learned about myself"]
+    }
+  }
+}

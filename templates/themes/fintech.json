@@ -1,0 +1,59 @@
+{
+  "name": "fintech",
+  "label": "Fintech",
+  "description": "For banking, investing, crypto, payments, budgeting, and lending apps. Adds vertical-specific themes on top of the general taxonomy.",
+  "version": "1.0",
+  "extends": "general",
+  "negative_themes": {
+    "money_lost": {
+      "label": "Money lost or stuck",
+      "keywords": ["lost money", "stole my money", "missing money", "missing funds", "wire transfer", "transfer didn't", "didn't receive", "never received", "stuck in", "frozen account", "froze my account"]
+    },
+    "fees_hidden": {
+      "label": "Hidden or surprise fees",
+      "keywords": ["hidden fee", "surprise fee", "didn't tell me", "fine print", "monthly fee i didn't", "atm fee", "foreign transaction", "wire fee", "overdraft", "minimum balance", "didn't disclose"]
+    },
+    "kyc_verification": {
+      "label": "Identity verification problems",
+      "keywords": ["kyc", "verification", "verify identity", "rejected my id", "wouldn't verify", "wont verify", "uploaded my", "ssn", "passport", "verify documents", "verification failed", "stuck in verification"]
+    },
+    "trading_execution": {
+      "label": "Trade execution & order issues",
+      "keywords": ["order didn't execute", "slippage", "wrong price", "missed the trade", "stop loss didn't", "couldn't sell", "couldnt sell", "couldn't buy", "market closed", "halted trading"]
+    },
+    "fraud_security": {
+      "label": "Fraud or security concerns",
+      "keywords": ["fraud", "fraudulent", "unauthorized", "someone got in", "hacked", "got hacked", "fishing", "phishing", "stolen", "compromised", "two factor", "2fa", "security issue"]
+    },
+    "withdrawal_issues": {
+      "label": "Can't withdraw funds",
+      "keywords": ["can't withdraw", "cant withdraw", "withdrawal", "won't let me withdraw", "withdrawal limit", "review my withdrawal", "blocked withdrawal", "stuck withdrawal"]
+    },
+    "support_critical": {
+      "label": "Support unreachable on critical issues",
+      "keywords": ["no phone number", "can't talk to a human", "no human support", "robot responses", "chatbot", "no real person", "this is my money"]
+    },
+    "regulatory_compliance": {
+      "label": "Regulatory or compliance issues",
+      "keywords": ["sec", "fdic", "not licensed", "not regulated", "ponzi", "tax form", "1099", "tax document", "reported wrong"]
+    }
+  },
+  "positive_themes": {
+    "saved_money": {
+      "label": "Saved or made money",
+      "keywords": ["saved me money", "saved hundreds", "saved thousands", "made money", "made profit", "rounded up", "high yield", "great returns", "got my money back"]
+    },
+    "transparency": {
+      "label": "Clear and transparent",
+      "keywords": ["transparent", "clear breakdown", "shows everything", "no hidden", "honest", "straightforward fees", "easy to understand"]
+    },
+    "fast_transfers": {
+      "label": "Fast & reliable transfers",
+      "keywords": ["instant transfer", "fast transfer", "same day", "immediately", "showed up right away", "no delay"]
+    },
+    "security_strong": {
+      "label": "Trust the security",
+      "keywords": ["feel safe", "trust them", "feels secure", "biometric", "face id", "trustworthy", "secure", "alerts immediately"]
+    }
+  }
+}

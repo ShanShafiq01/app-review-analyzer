@@ -1,0 +1,55 @@
+{
+  "name": "ecommerce",
+  "label": "E-commerce & Marketplace",
+  "description": "For shopping apps, marketplaces, delivery services, classifieds, and resale platforms. Adds vertical-specific themes on top of the general taxonomy.",
+  "version": "1.0",
+  "extends": "general",
+  "negative_themes": {
+    "shipping_delivery": {
+      "label": "Shipping & delivery problems",
+      "keywords": ["never arrived", "still hasn't arrived", "still waiting", "weeks late", "lost package", "tracking says", "fedex never", "ups never", "wrong address", "stolen package", "delivery driver"]
+    },
+    "wrong_item": {
+      "label": "Wrong or damaged item received",
+      "keywords": ["wrong item", "wrong size", "wrong color", "different from", "not as described", "fake product", "counterfeit", "damaged", "broken in", "missing parts", "missing items"]
+    },
+    "returns_refunds": {
+      "label": "Returns & refunds difficult",
+      "keywords": ["return policy", "won't refund", "wont refund", "no refund", "return label", "cant return", "can't return", "restocking fee", "denied refund", "ghosted my refund"]
+    },
+    "seller_issues": {
+      "label": "Bad sellers / third party issues",
+      "keywords": ["seller scammed", "seller never", "third party seller", "marketplace seller", "fake seller", "seller ghosted", "shady seller"]
+    },
+    "checkout_issues": {
+      "label": "Checkout / payment fails",
+      "keywords": ["checkout failed", "payment didn't go through", "charged twice", "double charged", "card declined", "lost my cart", "cart empty", "promo code didn't"]
+    },
+    "search_discovery": {
+      "label": "Search & product discovery broken",
+      "keywords": ["search doesn't work", "can't find anything", "filters don't work", "irrelevant results", "everything is sponsored", "sponsored results"]
+    },
+    "stock_inventory": {
+      "label": "Out of stock or inventory issues",
+      "keywords": ["out of stock", "ordered but unavailable", "cancelled my order", "inventory was wrong", "showed in stock"]
+    }
+  },
+  "positive_themes": {
+    "fast_shipping": {
+      "label": "Fast & reliable shipping",
+      "keywords": ["arrived next day", "fast shipping", "fast delivery", "delivered quickly", "earlier than expected", "free shipping", "prime"]
+    },
+    "great_selection": {
+      "label": "Great selection or pricing",
+      "keywords": ["huge selection", "lots of options", "great prices", "best prices", "cheaper than", "great deal", "amazing prices", "lowest price"]
+    },
+    "smooth_checkout": {
+      "label": "Smooth checkout & payment",
+      "keywords": ["easy checkout", "apple pay", "google pay", "one click", "saved my info", "smooth purchase"]
+    },
+    "good_returns": {
+      "label": "Easy returns",
+      "keywords": ["easy return", "no questions asked", "great return policy", "refunded quickly", "hassle-free return"]
+    }
+  }
+}

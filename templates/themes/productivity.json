@@ -1,0 +1,55 @@
+{
+  "name": "productivity",
+  "label": "Productivity & Work",
+  "description": "For notes, calendar, task management, project management, email clients, document editors, and work tools. Adds vertical-specific themes on top of the general taxonomy.",
+  "version": "1.0",
+  "extends": "general",
+  "negative_themes": {
+    "sync_issues": {
+      "label": "Sync problems between devices",
+      "keywords": ["doesn't sync", "wont sync", "won't sync", "sync issue", "out of sync", "different on my mac", "different on my phone", "lost my changes", "conflict copy", "merge conflict"]
+    },
+    "offline_broken": {
+      "label": "Offline mode broken",
+      "keywords": ["doesn't work offline", "no offline", "needs wifi", "needs internet", "on a plane", "in the subway", "no service"]
+    },
+    "data_export": {
+      "label": "Can't export or own my data",
+      "keywords": ["can't export", "cant export", "locked in", "data hostage", "no way to get my data", "vendor lock", "lock-in", "proprietary format"]
+    },
+    "collaboration_issues": {
+      "label": "Collaboration features broken",
+      "keywords": ["sharing doesn't work", "cant share", "can't invite", "permission denied", "team member can't see", "comments lost", "version history", "track changes"]
+    },
+    "feature_bloat": {
+      "label": "Too bloated / overcomplicated",
+      "keywords": ["too many features", "bloated", "overcomplicated", "complicated", "overwhelming", "simpler before", "everything but the kitchen sink"]
+    },
+    "search_within": {
+      "label": "Search within app doesn't work",
+      "keywords": ["search doesn't find", "cant find my note", "can't find my", "search broken", "search useless"]
+    },
+    "keyboard_shortcuts": {
+      "label": "Keyboard / power-user issues",
+      "keywords": ["no keyboard shortcuts", "no shortcuts", "mouse only", "no hotkey", "wish it had shortcuts"]
+    }
+  },
+  "positive_themes": {
+    "transformed_workflow": {
+      "label": "Transformed my workflow",
+      "keywords": ["transformed how", "changed how i work", "second brain", "everything in one place", "single source of truth", "main tool", "use it every day"]
+    },
+    "cross_platform": {
+      "label": "Cross-platform consistency",
+      "keywords": ["works everywhere", "same on mac", "same on windows", "seamless across", "instant sync", "syncs instantly"]
+    },
+    "speed_responsive": {
+      "label": "Fast & responsive",
+      "keywords": ["lightning fast", "instant", "snappy", "no lag", "feels native", "responsive", "performant"]
+    },
+    "team_adopted": {
+      "label": "Team & team-wide adoption",
+      "keywords": ["whole team uses", "entire company", "team standardized", "convinced my team", "rolled out to"]
+    }
+  }
+}

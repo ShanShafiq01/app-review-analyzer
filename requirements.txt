@@ -1,0 +1,9 @@
+# Core dependencies — always required
+google-play-scraper>=1.2.4
+requests>=2.31.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# Optional — only needed for specific output formats / features
+playwright>=1.40.0    # PDF generation (also run: playwright install chromium)
+anthropic>=0.39.0     # LLM-powered theme tagging (set ANTHROPIC_API_KEY)

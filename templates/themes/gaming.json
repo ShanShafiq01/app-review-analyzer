@@ -1,0 +1,63 @@
+{
+  "name": "gaming",
+  "label": "Mobile Gaming",
+  "description": "For mobile games of all genres — puzzle, RPG, strategy, casual, hyper-casual, multiplayer. Adds vertical-specific themes on top of the general taxonomy.",
+  "version": "1.0",
+  "extends": "general",
+  "negative_themes": {
+    "p2w_monetization": {
+      "label": "Pay-to-win monetization",
+      "keywords": ["pay to win", "p2w", "pay-to-win", "wallet warrior", "whales", "have to spend", "money grab", "cash grab", "greedy", "predatory", "gambling", "loot box", "lootbox", "gacha", "pity system"]
+    },
+    "lost_progress": {
+      "label": "Lost game progress",
+      "keywords": ["lost my progress", "lost all my", "starting over", "lost my account", "lost my characters", "save file", "cloud save", "rolled back"]
+    },
+    "matchmaking": {
+      "label": "Matchmaking & balance issues",
+      "keywords": ["unfair matchmaking", "matched against", "wait time", "no players", "dead game", "skill based matchmaking", "sbmm", "stacked teams", "smurfs", "smurfing"]
+    },
+    "energy_timers": {
+      "label": "Energy systems & wait timers",
+      "keywords": ["energy system", "wait timer", "wait hours", "have to wait", "cooldown", "stamina", "lives system", "limited plays"]
+    },
+    "bugs_disconnects": {
+      "label": "Disconnects & lag in multiplayer",
+      "keywords": ["disconnects", "kicked out", "lost the match", "server issue", "high ping", "rubber banding", "rubber-banding", "desync"]
+    },
+    "balance_complaints": {
+      "label": "Balance & nerf complaints",
+      "keywords": ["overpowered", "op character", "broken character", "nerf", "buffed", "meta", "tier list", "useless after update"]
+    },
+    "content_drought": {
+      "label": "Stale content / no updates",
+      "keywords": ["no new content", "boring", "repetitive", "same content", "nothing new", "stale", "abandoned", "stopped updating"]
+    },
+    "ads_in_game": {
+      "label": "Forced ads",
+      "keywords": ["ads after every", "30 second ad", "video ad", "forced ad", "ad to continue", "watch ad", "remove ads"]
+    }
+  },
+  "positive_themes": {
+    "addictive_fun": {
+      "label": "Addictive & fun",
+      "keywords": ["addictive", "addicting", "cant stop playing", "can't put it down", "lost hours", "one more game", "so much fun", "always pulls me back"]
+    },
+    "skill_growth": {
+      "label": "Rewards skill & strategy",
+      "keywords": ["skill based", "strategic", "skill ceiling", "depth", "got better", "improved", "rewarding to learn", "competitive"]
+    },
+    "fair_monetization": {
+      "label": "Fair monetization",
+      "keywords": ["fair monetization", "not pay to win", "no ads", "ad-free", "ad free", "one time purchase", "premium model", "respects players"]
+    },
+    "community_active": {
+      "label": "Active community & social play",
+      "keywords": ["great community", "guild", "clan", "play with friends", "friends play", "active discord", "tournament"]
+    },
+    "regular_updates": {
+      "label": "Active development & content",
+      "keywords": ["always new content", "regular updates", "devs listen", "developer responds", "active development", "new events"]
+    }
+  }
+}

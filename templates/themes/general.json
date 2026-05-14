@@ -1,0 +1,90 @@
+{
+  "name": "general",
+  "label": "General (works for any app)",
+  "description": "Default taxonomy covering complaints and praise patterns that apply across all app categories. Use when no vertical-specific taxonomy fits.",
+  "version": "1.0",
+  "negative_themes": {
+    "crashes_bugs": {
+      "label": "Crashes, freezes & bugs",
+      "keywords": ["crash", "freeze", "froze", "glitch", "buggy", "bug ", " bug.", "lag ", "laggy", "white screen", "spinning", "won't open", "wont open", "broken", "doesn't work", "doesnt work", "not working", "unresponsive", "stuck on", "stuck loading"]
+    },
+    "login_account": {
+      "label": "Login & account problems",
+      "keywords": ["log in", "login", "logging in", "sign in", "signin", "signing in", "sign up", "signup", "create account", "cant log", "can't log", "cant create", "can't create", "password reset", "forgot password", "verification", "verify email", "kicked out", "logged out"]
+    },
+    "forced_updates": {
+      "label": "Updates broke the app",
+      "keywords": ["update broke", "after the update", "after update", "latest update", "new version", "after they changed", "after they updated", "used to work", "used to be", "old app", "old version", "before the update", "recent update", "downgrade rating", "bring back"]
+    },
+    "ux_design": {
+      "label": "Confusing UX & poor design",
+      "keywords": ["confusing", "not user friendly", "not intuitive", "unintuitive", "hard to use", "difficult to use", "poorly designed", "bad design", "awful design", "hidden", "cant find", "can't find", "cant figure", "can't figure", "awfully designed", "poor design", "awkward", "where is the", "not clear how"]
+    },
+    "performance": {
+      "label": "Performance & speed",
+      "keywords": ["slow", "sluggish", "takes forever", "loading forever", "too slow", "drains battery", "battery drain", "uses too much data", "huge app", "takes too long", "minutes to load", "delay"]
+    },
+    "pricing_subscription": {
+      "label": "Pricing, subscription & value",
+      "keywords": ["waste of money", "wasted money", "waste of", "wasting money", "expensive", "overpriced", "rip off", "rip-off", "not worth", "worthless", "refund", "subscription", "cancel my subscription", "auto-renew", "auto renewal", "paywall", "paywalled", "trial", "free trial", "scam", "hidden fee"]
+    },
+    "support": {
+      "label": "Customer service issues",
+      "keywords": ["customer service", "customer support", "no response", "no reply", "help team", "support team", "won't help", "wont help", "unhelpful", "no help", "support didn't", "support never", "support is terrible", "ignored my email"]
+    },
+    "privacy_data": {
+      "label": "Privacy & data concerns",
+      "keywords": ["privacy", "tracking me", "my data", "selling data", "data breach", "creepy", "asks for too much", "permissions", "invasive", "spying", "personal info", "sensitive info"]
+    },
+    "notifications_spam": {
+      "label": "Notifications & spam",
+      "keywords": ["too many notifications", "spam", "constant notifications", "won't stop notifying", "wont stop", "marketing emails", "promotional", "unsubscribe"]
+    },
+    "missing_features": {
+      "label": "Feature missing or removed",
+      "keywords": ["used to have", "removed the", "took away", "where did", "missing feature", "no option to", "no way to", "wish it had", "needs a", "feature request"]
+    },
+    "ads_monetization": {
+      "label": "Ads & monetization",
+      "keywords": ["too many ads", "full of ads", "ads everywhere", "intrusive ads", "video ads", "popup ad", "ad after every", "force you to pay", "pay to remove"]
+    },
+    "compatibility": {
+      "label": "Device or OS compatibility",
+      "keywords": ["doesn't support my", "not compatible", "won't install", "wont install", "ipad version", "tablet version", "small screen", "doesn't fit my screen", "old phone"]
+    }
+  },
+  "positive_themes": {
+    "ease_of_use": {
+      "label": "Easy & intuitive to use",
+      "keywords": ["easy to use", "simple to use", "user friendly", "so easy", "super easy", "intuitive", "works great", "works perfectly", "easy and", "very simple", "straightforward", "no learning curve"]
+    },
+    "saves_time": {
+      "label": "Saves time / increases productivity",
+      "keywords": ["saves me time", "saves time", "so much faster", "more productive", "efficient", "speeds up", "saves hours", "in seconds"]
+    },
+    "solved_problem": {
+      "label": "Solved a specific problem",
+      "keywords": ["finally found", "finally an app", "exactly what i needed", "solved my", "helped me", "lifesaver", "life saver", "game changer", "game-changer", "changed my life"]
+    },
+    "great_support": {
+      "label": "Great customer support",
+      "keywords": ["great customer", "amazing customer", "great support", "helpful support", "quick to respond", "responded quickly", "caring team", "so caring", "helpful team", "support was great", "support team is"]
+    },
+    "educational": {
+      "label": "Educational & informative",
+      "keywords": ["educational", "informative", "lots of info", "explanations", "walks you through", "guides you", "helpful info", "lots of detail", "i learned", "learned so much", "taught me"]
+    },
+    "design_quality": {
+      "label": "Great design",
+      "keywords": ["beautiful design", "beautiful app", "well designed", "well-designed", "love the design", "gorgeous", "clean interface", "minimalist", "polished"]
+    },
+    "worth_price": {
+      "label": "Worth the price",
+      "keywords": ["worth every penny", "worth it", "worth the price", "worth the money", "best money", "value for money", "totally worth"]
+    },
+    "recommend": {
+      "label": "Strongly recommended",
+      "keywords": ["highly recommend", "would recommend", "told my friends", "everyone should", "must have", "must-have", "best app", "favorite app"]
+    }
+  }
+}
