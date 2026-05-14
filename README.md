@@ -74,7 +74,7 @@ Five options. Each is one self-contained block — copy, paste, hit Enter.
 
 ### Option A — claude.ai web upload (zero terminal, recommended for non-developers)
 
-1. Download `app-review-analyzer-v0.3.5.skill` from the [latest Release](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest)
+1. Download `app-review-analyzer-vX.Y.Z.skill` (latest version) from the [latest Release](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest)
 2. Open [claude.ai](https://claude.ai) → click your name → **Settings** → **Capabilities** → **Skills**
 3. Click **Upload skill** → drop the `.skill` file in
 4. Done. In any chat, try: *"Analyze reviews for &lt;app name&gt; on both stores"*
@@ -112,6 +112,8 @@ Identical to Option B — same shell, same script. Just listed separately so Lin
 Then in Claude Code: `Analyze reviews for <app name on both stores>`
 
 ### Or as a Claude Code slash command
+
+The skill itself is named **`app-review-analyzer`** (that's the repo, the install directory, and what claude.ai shows in Settings → Skills). In Claude Code, you can also invoke it via the slash command **`/review-analyze`** — just a shortcut alias, same skill, no separate install:
 
 ```
 /review-analyze https://apps.apple.com/us/app/your-app/id1234567890

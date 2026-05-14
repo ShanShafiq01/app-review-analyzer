@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.4.1
+version: 0.4.2
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---

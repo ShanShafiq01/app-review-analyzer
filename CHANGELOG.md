@@ -2,6 +2,29 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.2] — 2026-05-14
+
+**Hotfix: stale version in README + INSTALL.md filename references; clarified skill name vs slash command.**
+
+### Fixed
+
+- **Hardcoded `v0.3.5` skill filename in README.md and INSTALL.md** — replaced with `vX.Y.Z` placeholder convention so the docs don't go stale on every release. Previously these said "download `app-review-analyzer-v0.3.5.skill`" which became wrong the moment v0.4.0 shipped.
+
+### Added
+
+- **Skill name vs slash command clarification in README** — the skill is named `app-review-analyzer` (used for the repo, install directory, claude.ai Skills list entry). In Claude Code, `/review-analyze` is a slash-command shortcut alias for the same skill, NOT a separate install or a different name. The README's slash-command section now spells out this distinction so users don't get confused about which name to use where.
+
+### Update path
+
+```bash
+# Claude Code
+cd ~/.claude/skills/app-review-analyzer && git pull
+```
+
+Docs-only patch. claude.ai users can re-download the v0.4.2 `.skill` zip if they want the updated docs, but the runtime behavior is identical to v0.4.1.
+
+---
+
 ## [0.4.1] — 2026-05-14
 
 **Hotfix: neutral example names in user-facing docs.** v0.4.0 shipped with "Duolingo" as the example app name in the SKILL.md presentation mockups, README/INSTALL "try this" prompts, and one CHANGELOG line. This contradicts the v0.3.1 decision to use generic placeholders throughout user-facing docs — *"sidesteps any 'is this app endorsed by us?' misperception when readers scan the repo for the first time."*

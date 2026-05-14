@@ -18,7 +18,7 @@ Pick the option that matches your setup. All five are first-class — no "primar
 
 For anyone using claude.ai in a browser. Zero command-line. ~60 seconds end-to-end.
 
-1. **Download** the latest `.skill` package from [Releases](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest). It's a single ~130KB file named something like `app-review-analyzer-v0.3.5.skill`.
+1. **Download** the latest `.skill` package from [Releases](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest). It's a single ~130KB file named `app-review-analyzer-vX.Y.Z.skill` (where `X.Y.Z` is the latest version number — grab whichever shows as **Latest**).
 
 2. **Open** [claude.ai](https://claude.ai) in your browser → click your name in the bottom-left → **Settings** → **Capabilities** → **Skills**.
 
