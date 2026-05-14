@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.3.5
+version: 0.4.0
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -95,26 +95,98 @@ The `run_pipeline` function returns a dict:
 }
 ```
 
-**On success:** present the generated files to the user, leading with the executive summary HTML (the most polished deliverable). If there were warnings, surface them clearly first.
+## How to present results — copy these patterns
 
-How to present depends on the channel:
+The pipeline gives you everything you need. Read `result["top_findings"]` (a list of 0-3 data-grounded strings — never invent your own, **only use what's there**). Read `result["primary_output"]` (the path to the file the user should look at first). Then format your reply using the literal pattern for the channel you're in. Three patterns below — match them as closely as possible.
 
-- **In claude.ai (web/desktop) — sandboxed runtime:** write outputs to `/mnt/user-data/outputs/<app_slug>/` and call `present_files` so the user gets one-click download buttons in the chat. This is the canonical Anthropic pattern for surfacing generated artifacts. If the user did not specify `--output`, default to `/mnt/user-data/outputs/<app_slug>/` when you detect the sandbox.
-- **In Claude Code (CLI / VSCode extension / terminal) — local filesystem:** the pipeline already does most of the work for you. When run in a TTY, it **auto-opens the executive summary in the user's default browser**, and the HTML itself contains a **Downloads** section with working `<a download>` links for every other generated file (xlsx, csv, json, markdown). So your job is much simpler than it used to be:
-  1. Lead with one sentence: "The executive summary should have opened in your browser. Scroll to the **Downloads** section for the Excel workbook and raw CSVs."
-  2. Then output the one-line `open <absolute-path>` command **inside a fenced code block** — every chat client renders this with a copy button:
-     ```
-     open /Users/you/proov-review-analysis/executive_summary.html
-     ```
-     Use `open` on macOS, `xdg-open` on Linux, `start` on Windows. Always use **absolute paths**.
-  3. DO NOT write a bullet list of file names like "executive_summary.html — start here / playstore_deepdive.html / ...". File names rendered as text or as markdown links generally do NOT open files when clicked (claude.ai web blocks `file://` from its `https://` origin; VSCode chat opens HTML as source text; terminals can't navigate paths). Pointing users at the in-HTML Downloads section is what actually works.
-  4. Briefly name what's in the report — review count per store, taxonomy used, top finding — but keep file-finding instructions to the single `open` command + the Downloads-section hint above.
+### Pattern 1 — claude.ai web (sandboxed runtime)
 
-Either way, never just dump raw paths as plain text. Make the files actionable.
+In this channel, files in `/mnt/user-data/outputs/<app_slug>/` are surfaced as one-click download buttons via `present_files()`. The user CANNOT click any plain filename in your chat text — only the official download buttons work. So:
 
-**On partial success (warnings present but success=True):** present files but lead with the warning. Example:
+1. Default `--output` to `/mnt/user-data/outputs/<app_slug>/` when you detect the sandbox.
+2. Call `present_files()` with the generated file paths before writing your reply.
+3. Write your reply using this literal pattern (substitute the bold sections with real data from `result`):
 
-> "Done! I pulled 170 reviews from the Play Store. Apple was rate-limiting heavily — try re-running in 30 minutes for cross-store comparison. Here's what I have:"
+```markdown
+✓ Pulled **234 Play Store + 196 App Store** reviews for **Duolingo** (430 total).
+
+**Top findings:**
+• **iOS users rate Duolingo +0.45★ higher than Android (4.7 vs 4.25)**
+• **62 reviews name subscription friction — the #1 complaint across both stores**
+• **47% of 5-star reviews mention streak — the strongest loyalty signal**
+
+📎 *Files attached above — click any to open or download:*
+  • **executive_summary.html** — start here, has the charts and verbatim quotes
+  • **playstore_deepdive.html** — Android-only thematic breakdown
+  • **appstore_deepdive.html** — iOS-only thematic breakdown
+  • **duolingo_reviews.xlsx** — 5-sheet analyst workbook
+  • **all_reviews.csv** — combined raw export
+
+Want a different angle? I can re-run with a specific country, focus on a date
+range, or compare against a competitor.
+```
+
+If `present_files()` fails or wasn't called (sandbox issue), use Pattern 3 instead.
+
+### Pattern 2 — Claude Code (VSCode extension, terminal Claude, anywhere with `webbrowser.open`)
+
+In this channel, the pipeline already auto-opened the executive summary in the user's default browser, and the HTML itself has a working Downloads section. Your job is to orient them, not duplicate the file list. Write your reply using this literal pattern:
+
+```markdown
+✓ Pulled **234 Play Store + 196 App Store** reviews for **Duolingo** (430 total).
+
+**Top findings:**
+• **iOS users rate Duolingo +0.45★ higher than Android (4.7 vs 4.25)**
+• **62 reviews name subscription friction — the #1 complaint across both stores**
+• **47% of 5-star reviews mention streak — the strongest loyalty signal**
+
+📊 **Your executive summary should have opened in your browser.** Scroll to the
+**Downloads** section at the bottom of that page for the Excel workbook, CSVs,
+and raw JSON.
+
+If your browser didn't open, copy and run this:
+
+\`\`\`
+open /Users/you/output/duolingo/executive_summary.html
+\`\`\`
+
+Want a different angle? I can re-run with a specific country, focus on a date
+range, or compare against a competitor.
+```
+
+The fenced `open` block gets a copy button in every chat client. Use `open` on macOS, `xdg-open` on Linux, `start` on Windows.
+
+### Pattern 3 — Fallback (sandbox failed, or no browser available)
+
+Use this only if Pattern 1's `present_files()` failed AND you can't reach a browser:
+
+```markdown
+✓ Pulled **234 Play Store + 196 App Store** reviews for **Duolingo** (430 total).
+
+**Top findings:**
+• **iOS users rate Duolingo +0.45★ higher than Android (4.7 vs 4.25)**
+• **62 reviews name subscription friction — the #1 complaint across both stores**
+• **47% of 5-star reviews mention streak — the strongest loyalty signal**
+
+⚠ I generated the files but couldn't attach or open them. They're at:
+`/path/to/output/duolingo/`
+
+Re-run if you need them as clickable downloads.
+```
+
+### Rules across all three patterns
+
+- **Always use the four-part structure:** result line → findings → file affordance → next-step suggestion.
+- **Always lead with concrete numbers.** "Pulled 234 + 196" not "scraped some reviews."
+- **Always use `result["top_findings"]` verbatim.** Don't invent findings. If the list is empty (small app, no clear patterns), omit the findings block entirely — don't fabricate.
+- **Never list plain filenames as the file affordance.** They don't open. Either use `present_files()` (Pattern 1) or point at the in-HTML Downloads section (Pattern 2).
+- **Always use absolute paths in the `open` command.** `~/...` doesn't expand inside markdown link URLs.
+
+**On partial success (warnings present but success=True):** prepend the warning before the result line:
+
+> "⚠ Apple was rate-limiting heavily — Play Store data only. Re-run in 30 minutes for the full cross-store report.
+>
+> ✓ Pulled 234 Play Store reviews for Duolingo..."
 
 **On failure (success=False):** show the `user_message` to the user. Common failure modes:
 
