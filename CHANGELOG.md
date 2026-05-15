@@ -2,6 +2,59 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.4] — 2026-05-15
+
+**Hotfix: folder path in chat reply was rendering as a broken clickable link + new auto-reveal-folder feature.**
+
+A user on claude.ai web reported that after running the skill, Claude's chat reply included "Files at output/proov/:" — and clicking that path produced **"File could not be read. It may have been deleted or moved, or it lives outside the session folder."** The individual file links underneath worked fine (clicking `executive_summary.html` opened correctly via the right-panel viewer), but the folder path itself was unreachable.
+
+Root cause: claude.ai's chat client auto-renders path-shaped strings as clickable, but the right-panel viewer can only display individual files registered via `present_files()` — directories are not navigable. So the folder path text was being auto-linked but pointed at nothing the UI could open.
+
+### Fixed — drop folder path from `user_message`
+
+`scripts/run_pipeline.py:385` used to append `f"\nFiles generated in {output_dir}"` to the user-facing message. Claude read that line and pasted the path into the chat reply, where it got auto-linked and broke. Replaced with a generic `"N files generated."` line that doesn't include the directory path. The actual file locations are still available via `result["primary_output"]` (executive summary path) and `result["generated_files"]` (per-format paths) — structured fields Claude reads directly, not freeform text that gets auto-rendered.
+
+### Changed — SKILL.md "Rules across all three patterns": explicit anti-folder-path rule
+
+Added a new rule to the rules section: **"Never write the output folder path as plain text in your reply."** Spells out the exact error users see if this rule is broken, and lists two safe alternatives: (a) omit the folder reference entirely (Pattern 1 — files appear above via `present_files()`), or (b) put it inside a fenced code block so it renders as a copy-button rather than a clickable link (Pattern 2).
+
+### Added — Pattern 2 "Reveal output folder" affordance
+
+For Claude Code (local) users, Pattern 2's mockup now includes a **second fenced code block** alongside the existing executive-summary open command:
+
+```
+To reveal all output files in Finder/Explorer/file manager:
+
+    open /Users/you/output/acme-notes/
+```
+
+Click the copy button → paste in terminal → Finder opens the folder showing all generated files. Answers the user's "can we open Finder here?" question directly. The fenced format means the path is never auto-linked in chat — only the copy button is interactive.
+
+### Added — auto-reveal output folder in Finder/Explorer on Claude Code
+
+The pipeline's `main()` now auto-opens the output folder in the user's native file manager alongside the existing browser auto-open. Mirrors the same `webbrowser.open()` pattern: same TTY gating, same `--no-open` / `--quiet` flags, same skip-on-sandbox behavior. Implementation uses `subprocess.Popen` (non-blocking) with `open` on macOS, `explorer` on Windows, `xdg-open` on Linux.
+
+The pipeline result dict gained a new field — `result["output_dir"]` — surfaced alongside the existing `result["primary_output"]` for callers that want the folder path programmatically.
+
+**What the user sees on Mac after this release:** runs the skill → both the browser AND Finder pop up. Browser shows the executive summary HTML; Finder shows the folder containing all generated files. Zero clicks needed.
+
+### Update path
+
+```bash
+# Claude Code (Mac / Linux)
+cd ~/.claude/skills/app-review-analyzer && git pull
+
+# Windows PowerShell
+cd $env:USERPROFILE\.claude\skills\app-review-analyzer; git pull
+
+# Windows CMD
+cd %USERPROFILE%\.claude\skills\app-review-analyzer & git pull
+```
+
+**claude.ai web users on v0.4.0-0.4.3**: re-download the v0.4.4 `.skill` zip from [Releases](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest) and re-upload via Settings → Skills. The folder-path-as-broken-link issue is fixed Anthropic-side after the re-upload (the fix lives in SKILL.md's presentation rules + the pipeline user_message format, both of which ship inside the zip).
+
+---
+
 ## [0.4.3] — 2026-05-15
 
 **Hotfix combining three independent fixes:** a claude.ai-sandbox file-visibility bug, README prerequisites that were missing, and SKILL.md presentation guidance that wasn't strong enough about the sandbox output path.

@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.4.3
+version: 0.4.4
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -145,15 +145,24 @@ In this channel, the pipeline already auto-opened the executive summary in the u
 • **62 reviews name subscription friction — the #1 complaint across both stores**
 • **47% of 5-star reviews mention streak — the strongest loyalty signal**
 
-📊 **Your executive summary should have opened in your browser.** Scroll to the
-**Downloads** section at the bottom of that page for the Excel workbook, CSVs,
-and raw JSON.
+📊 **Your executive summary should have opened in your browser, and Finder/Explorer
+should have opened to the output folder.** Scroll to the **Downloads** section at
+the bottom of the executive summary for the Excel workbook, CSVs, and raw JSON.
 
 If your browser didn't open, copy and run this:
 
 \`\`\`
 open /Users/you/output/acme-notes/executive_summary.html
 \`\`\`
+
+To reveal all output files in Finder/Explorer/file manager:
+
+\`\`\`
+open /Users/you/output/acme-notes/
+\`\`\`
+
+(Use `open` on macOS, `explorer` on Windows, `xdg-open` on Linux. Both blocks
+get copy buttons in every chat client — never paste the folder path as plain text.)
 
 Want a different angle? I can re-run with a specific country, focus on a date
 range, or compare against a competitor.
@@ -185,6 +194,7 @@ Re-run if you need them as clickable downloads.
 - **Always lead with concrete numbers.** "Pulled 234 + 196" not "scraped some reviews."
 - **Always use `result["top_findings"]` verbatim.** Don't invent findings. If the list is empty (small app, no clear patterns), omit the findings block entirely — don't fabricate.
 - **Never list plain filenames as the file affordance.** They don't open. Either use `present_files()` (Pattern 1) or point at the in-HTML Downloads section (Pattern 2).
+- **Never write the output folder path as plain text in your reply.** claude.ai's chat client auto-renders path-shaped strings as clickable, but the right-panel viewer can only render individual files — directories return *"File could not be read. It may have been deleted or moved, or it lives outside the session folder"* when clicked. **Don't** write "Files at output/acme-notes/:" or anything similar. Either omit the folder reference entirely (Pattern 1: files appear above via `present_files()`) or put it inside a fenced code block so it renders as a copy-button, not a clickable link (Pattern 2).
 - **Always use absolute paths in the `open` command.** `~/...` doesn't expand inside markdown link URLs.
 
 **On partial success (warnings present but success=True):** prepend the warning before the result line:

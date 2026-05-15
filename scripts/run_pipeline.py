@@ -351,6 +351,12 @@ def run_pipeline(
     if primary_html and primary_html.exists():
         result["primary_output"] = str(primary_html.resolve())
 
+    # v0.4.4: also surface the resolved output directory so main() can auto-open
+    # it in the user's native file manager (Finder / Explorer / xdg-open) alongside
+    # the existing browser auto-open. Same gating: TTY + --no-open + --quiet.
+    # Skipped on claude.ai sandbox (the sandbox isn't a TTY).
+    result["output_dir"] = str(output_dir.resolve())
+
     # Surface top_findings on the result dict. Claude reads these structured
     # findings from the result dict and lifts them verbatim into its chat reply
     # (per the literal mockups in SKILL.md). Data-grounded, never invented.
@@ -382,7 +388,16 @@ def run_pipeline(
             msg_parts.append(f"  - {w}")
 
     if generated:
-        msg_parts.append(f"\nFiles generated in {output_dir}")
+        # v0.4.4: never include the directory path here. claude.ai's chat client
+        # auto-renders path-shaped strings as clickable, but only individual files
+        # render in the right-panel viewer — clicking a folder path produces
+        # "File could not be read... lives outside the session folder." The file
+        # count is informational only; the actual files are surfaced via
+        # result["generated_files"] (per-format) and result["primary_output"]
+        # (the executive summary's absolute path) for callers that need them.
+        file_count = sum(len(v) for v in generated.values())
+        plural = "s" if file_count != 1 else ""
+        msg_parts.append(f"\n{file_count} file{plural} generated.")
 
     # File affordance: single copy-friendly open command. Filenames-as-text in
     # chat don't actually open files in any context (claude.ai web blocks
@@ -483,6 +498,32 @@ Examples:
             webbrowser.open(Path(primary).as_uri())
         except Exception:
             pass  # opening is a nicety, not a guarantee
+
+    # v0.4.4: Auto-reveal the output folder in the user's native file manager
+    # alongside the browser auto-open. Answers the "can we open Finder here?"
+    # question for Claude Code users. Same gating as the browser block above —
+    # skipped in CI, headless, --no-open, --quiet, and in the claude.ai sandbox
+    # (which doesn't pass the TTY check anyway, and has no file manager UI).
+    output_dir_str = result.get("output_dir")
+    if (output_dir_str
+            and not args.no_open
+            and not args.quiet
+            and sys.stdout.isatty()
+            and sys.stdin.isatty()):
+        try:
+            import subprocess
+            if sys.platform == "darwin":
+                subprocess.Popen(["open", output_dir_str])
+            elif sys.platform == "win32":
+                subprocess.Popen(["explorer", output_dir_str])
+            else:
+                # Linux / BSD / other Unix — xdg-open is the freedesktop standard.
+                # Fails silently if xdg-utils isn't installed (headless containers,
+                # minimal distros). The user can still copy-paste the open command
+                # from the user_message instead.
+                subprocess.Popen(["xdg-open", output_dir_str])
+        except Exception:
+            pass  # revealing the folder is a nicety, not a guarantee
 
     # Update-check banner. Cached for 24h, fails silently on any error
     # (network down, repo not yet public, parse failure). Only prints when a
