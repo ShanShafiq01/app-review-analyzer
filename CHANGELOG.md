@@ -2,6 +2,69 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.7] — 2026-05-15
+
+**Hotfix: Pattern 2 (Claude Code) HTML files are now `file://` markdown links that open in Claude Code Desktop's preview pane.**
+
+User report after v0.4.6: backticked file list wasn't clickable. User asked: *"hyperlinks that when clicked open in the right panel of Claude Code desktop for Mac and Windows."*
+
+Before shipping, ran a Reality Checker audit since I couldn't verify the click behavior from here. The audit found **concrete evidence** at [code.claude.com/docs/en/desktop](https://code.claude.com/docs/en/desktop):
+
+> *"Click a file path in the chat or diff viewer to open it in the file pane. HTML, PDF, image, and video paths open in the preview pane instead."*
+
+So Claude Code Desktop (Mac + Windows) DOES route HTML `file://` clicks to the preview pane — exactly the right-panel behavior the user wants. But the audit also found that **non-HTML files (xlsx, csv) open in the file pane as text/binary garbage**, not in Excel. And **VSCode extension** opens HTML as source text (GH #43708), while **terminal CLI** doesn't render `file://` as clickable at all (Anthropic explicitly declined OSC 8 for non-http schemes — GH #42519, closed not-planned).
+
+### Changed — HTML files in Pattern 2 are now `file://` markdown links
+
+Selective linkification based on what actually works in Claude Code Desktop:
+
+```diff
+- • `executive_summary.html` — start here, cross-store synthesis
++ • [executive_summary.html](file:///Users/you/output/acme-notes/executive_summary.html) — start here, cross-store synthesis *(click to preview)*
+
+- • `playstore_deepdive.html` — Android breakdown
++ • [playstore_deepdive.html](file:///Users/you/output/acme-notes/playstore_deepdive.html) — Android breakdown *(click to preview)*
+
+- • `appstore_deepdive.html` — iOS breakdown
++ • [appstore_deepdive.html](file:///Users/you/output/acme-notes/appstore_deepdive.html) — iOS breakdown *(click to preview)*
+```
+
+Click any HTML file in the Claude Code Desktop chat → opens in the preview pane on Mac OR Windows. The `(click to preview)` annotation tells the user explicitly what the click does.
+
+### Kept — xlsx and csv files stay as backticks
+
+Linkifying xlsx/csv would have over-promised — clicking them on Claude Code Desktop opens the file pane with text/binary garbage (not Excel, not Numbers). Misleading. They stay as backticked monospace text:
+
+```
+• `acme_notes_reviews.xlsx` — 5-sheet workbook *(opens in Excel via the auto-opened Finder/Explorer or the HTML Downloads section)*
+• `all_reviews.csv`, `playstore_reviews.csv`, `appstore_reviews.csv` — raw exports *(same)*
+```
+
+Users reach Excel/Numbers via the auto-opened Finder + the in-HTML Downloads section + the fenced `open <folder>` command — paths that actually work.
+
+### Updated — Pattern 2 notes section
+
+Added a per-surface click-behavior table (Claude Code Desktop / VSCode extension / terminal CLI / claude.ai web) citing the documentation and GitHub issues that the audit found. So future maintainers know exactly why HTML is linkified and other formats aren't.
+
+### Update path
+
+```bash
+# Claude Code
+cd ~/.claude/skills/app-review-analyzer && git pull
+```
+
+claude.ai web users: no action required (Pattern 1 unchanged from v0.4.5).
+
+### Honest scope boundary
+
+This change only improves the **HTML click experience on Claude Code Desktop** (Mac + Windows). It doesn't fix:
+- VSCode extension users (HTML still opens as source text — no good workaround per Anthropic's design)
+- Terminal CLI users (links still render as colored text only — Anthropic declined the OSC 8 feature request)
+
+Both of those surfaces still have the auto-opened browser + Finder/Explorer + fenced `open` commands as working file-access mechanisms.
+
+---
+
 ## [0.4.6] — 2026-05-15
 
 **Three related fixes: auto-open now fires from Claude Code, Pattern 2 lists files, cross-platform reviewed by senior engineer.**

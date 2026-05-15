@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.4.6
+version: 0.4.7
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -151,11 +151,11 @@ In this channel, the pipeline already auto-opened the executive summary in the u
 📊 **Your executive summary opened in your browser, and Finder/Explorer opened to the output folder.**
 
 **Files generated:**
-• `executive_summary.html` — start here, cross-store synthesis with charts and verbatim quotes
-• `playstore_deepdive.html` — Android-only thematic breakdown
-• `appstore_deepdive.html` — iOS-only thematic breakdown
-• `acme_notes_reviews.xlsx` — 5-sheet analyst workbook
-• `all_reviews.csv`, `playstore_reviews.csv`, `appstore_reviews.csv` — raw exports
+• [executive_summary.html](file:///Users/you/output/acme-notes/executive_summary.html) — start here, cross-store synthesis with charts and verbatim quotes *(click to preview)*
+• [playstore_deepdive.html](file:///Users/you/output/acme-notes/playstore_deepdive.html) — Android-only thematic breakdown *(click to preview)*
+• [appstore_deepdive.html](file:///Users/you/output/acme-notes/appstore_deepdive.html) — iOS-only thematic breakdown *(click to preview)*
+• `acme_notes_reviews.xlsx` — 5-sheet analyst workbook *(opens in Excel via the auto-opened Finder/Explorer, or the in-HTML Downloads section)*
+• `all_reviews.csv`, `playstore_reviews.csv`, `appstore_reviews.csv` — raw exports *(same: open via Finder/Explorer or the Downloads section in the HTML)*
 
 Scroll to the **Downloads** section at the bottom of the executive summary for one-click access to every file inside the browser.
 
@@ -185,10 +185,23 @@ range, or compare against a competitor.
 
 The file-vs-folder distinction matters on **Windows**: `start file.html` opens the HTML in the default browser; `explorer folder` opens the folder in a new Explorer window. Swapping them produces wrong behavior. `result["user_message"]` ships both correctly — just paste the lines as-is.
 
-Notes on the file list:
-- **Wrap filenames in backticks** (` `executive_summary.html` `) — inline code formatting gives them a monospace look and prevents claude.ai chat from auto-linking them as path-shaped strings (which would error out the same way folder paths do).
-- **Do NOT make them markdown links to `file:///...` URIs** — those don't open files in their associated apps reliably in Claude Code's VSCode extension chat (HTML opens as source text, xlsx doesn't open at all). The bullets are reference-only; actual opening happens via the auto-opened browser + Finder/Explorer + the in-HTML Downloads section.
+Notes on the file list — **HTML files are linkified, everything else stays as backticks**:
+
+- **HTML files (`.html`) → markdown link to `file://` URI**. Claude Code Desktop (Mac + Windows) [documents this explicitly](https://code.claude.com/docs/en/desktop): clicking an HTML/PDF/image/video path in chat opens it in the **preview pane** (the right panel). This is the primary clickable affordance.
+- **xlsx, csv, json, md → keep as backticks** (`` `acme_notes_reviews.xlsx` ``). Claude Code Desktop opens non-HTML `file://` links in the **file pane** as text/binary view (xlsx → garbage text, not Excel). The backtick form signals "this is a filename" without misleading the user into thinking the click will open Excel. The user reaches non-HTML files via the auto-opened Finder/Explorer or the in-HTML Downloads section instead.
+- **Construct file:// URIs from `result["primary_output"]` and `result["generated_files"]`** — Python's `Path(p).as_uri()` produces the right format on every OS (`file:///Users/...` on POSIX, `file:///C:/...` on Windows).
 - **Always include the description after the —** so the user knows what each file is for without opening it.
+
+**Surface-specific click behavior** (verified via Anthropic docs + Claude Code GitHub issues):
+
+| Surface | HTML `file://` click | xlsx/csv `file://` click would do |
+|---|---|---|
+| Claude Code Desktop (Mac + Win) | ✓ opens in preview pane (right panel) | ✗ opens in file pane as text garbage |
+| Claude Code VSCode extension | ⚠ opens HTML as source text | ⚠ unhandled |
+| Claude Code terminal CLI | ✗ not clickable (Anthropic explicitly declined to ship OSC 8 for `file://` — see GH #42519) | ✗ same |
+| claude.ai web | ✗ blocked by browser https-origin policy | ✗ same |
+
+That's why we linkify HTML only — it's the one file type where `file://` click reliably wins on the primary target (Claude Code Desktop) without misleading on other surfaces.
 
 ### Pattern 3 — Fallback (sandbox failed, or no browser available)
 
