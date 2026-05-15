@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.4.4
+version: 0.4.5
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -103,12 +103,12 @@ The pipeline gives you everything you need. Read `result["top_findings"]` (a lis
 
 **⚠ CRITICAL — files MUST be written under `/mnt/user-data/outputs/`.** The chat UI's right-panel viewer only reads from that exact path. Files written anywhere else exist in the sandbox filesystem but show as **"File could not be read. It may have been deleted or moved, or it lives outside the session folder"** when the user clicks them. The pipeline now auto-routes outputs to `/mnt/user-data/outputs/<app_slug>/` when it detects the sandbox (since v0.4.3), so the default behavior is correct — but if you pass `--output` explicitly, **always use that prefix.**
 
-In this channel, files in `/mnt/user-data/outputs/<app_slug>/` are surfaced as one-click download buttons via `present_files()`. The user CANNOT click any plain filename in your chat text — only the official download buttons work. So:
+In this channel, files in `/mnt/user-data/outputs/<app_slug>/` are surfaced two ways: (a) as one-click download buttons via `present_files()` above your message, AND (b) as inline clickable markdown links inside your bullet list. Both must be done — `present_files()` gives the right-panel download buttons; markdown links make the bullets in your chat reply also clickable to open the file in the right panel. So:
 
 1. **Leave `output_dir` unset** — the pipeline auto-detects the sandbox and routes to `/mnt/user-data/outputs/<app_slug>/`. (Or, if you must set it explicitly, the path MUST start with `/mnt/user-data/outputs/`.)
 2. After the pipeline returns, check `result["warnings"]` — if you see `"files will be invisible in claude.ai's right-panel viewer"`, the path is wrong and the files are unreachable. Re-run with the correct path.
 3. Call `present_files()` with the generated file paths before writing your reply.
-4. Write your reply using this literal pattern (substitute the bold sections with real data from `result`):
+4. Write your reply using this literal pattern. **Each file in the bullet list MUST be a markdown link with the absolute sandbox path** — `[name](/mnt/user-data/outputs/<app_slug>/name)` — so the user can click it inline. Plain text or bold-only filenames are NOT clickable in chat.
 
 ```markdown
 ✓ Pulled **234 Play Store + 196 App Store** reviews for **Acme Notes** (430 total).
@@ -118,18 +118,18 @@ In this channel, files in `/mnt/user-data/outputs/<app_slug>/` are surfaced as o
 • **62 reviews name subscription friction — the #1 complaint across both stores**
 • **47% of 5-star reviews mention streak — the strongest loyalty signal**
 
-📎 *Files attached above — click any to open or download:*
-  • **executive_summary.html** — start here, has the charts and verbatim quotes
-  • **playstore_deepdive.html** — Android-only thematic breakdown
-  • **appstore_deepdive.html** — iOS-only thematic breakdown
-  • **acme_notes_reviews.xlsx** — 5-sheet analyst workbook
-  • **all_reviews.csv** — combined raw export
+📎 *Click any file to open in the right panel:*
+  • [executive_summary.html](/mnt/user-data/outputs/acme-notes/executive_summary.html) — start here, has the charts and verbatim quotes
+  • [playstore_deepdive.html](/mnt/user-data/outputs/acme-notes/playstore_deepdive.html) — Android-only thematic breakdown
+  • [appstore_deepdive.html](/mnt/user-data/outputs/acme-notes/appstore_deepdive.html) — iOS-only thematic breakdown
+  • [acme_notes_reviews.xlsx](/mnt/user-data/outputs/acme-notes/acme_notes_reviews.xlsx) — 5-sheet analyst workbook
+  • [all_reviews.csv](/mnt/user-data/outputs/acme-notes/all_reviews.csv) — combined raw export
 
 Want a different angle? I can re-run with a specific country, focus on a date
 range, or compare against a competitor.
 ```
 
-(`Acme Notes` is a placeholder name used in these examples — substitute the real app you analyzed.)
+(`Acme Notes` is a placeholder name used in these examples — substitute the real app you analyzed. The path segment after `/mnt/user-data/outputs/` is the actual `<app_slug>` from `result["output_dir"]`.)
 
 If `present_files()` fails or wasn't called (sandbox issue), use Pattern 3 instead.
 
@@ -193,7 +193,7 @@ Re-run if you need them as clickable downloads.
 - **Always use the four-part structure:** result line → findings → file affordance → next-step suggestion.
 - **Always lead with concrete numbers.** "Pulled 234 + 196" not "scraped some reviews."
 - **Always use `result["top_findings"]` verbatim.** Don't invent findings. If the list is empty (small app, no clear patterns), omit the findings block entirely — don't fabricate.
-- **Never list plain filenames as the file affordance.** They don't open. Either use `present_files()` (Pattern 1) or point at the in-HTML Downloads section (Pattern 2).
+- **Never list plain filenames as the file affordance.** Plain text and bold-only filenames are NOT clickable in claude.ai chat. In Pattern 1, **each filename in the bullet list MUST be a markdown link**: `[filename](/mnt/user-data/outputs/<app_slug>/filename)`. The link target is the absolute sandbox path — clicking opens the file in the right-panel viewer. Plus always call `present_files()` (the download-button block above) as a parallel affordance. In Pattern 2, point at the in-HTML Downloads section instead.
 - **Never write the output folder path as plain text in your reply.** claude.ai's chat client auto-renders path-shaped strings as clickable, but the right-panel viewer can only render individual files — directories return *"File could not be read. It may have been deleted or moved, or it lives outside the session folder"* when clicked. **Don't** write "Files at output/acme-notes/:" or anything similar. Either omit the folder reference entirely (Pattern 1: files appear above via `present_files()`) or put it inside a fenced code block so it renders as a copy-button, not a clickable link (Pattern 2).
 - **Always use absolute paths in the `open` command.** `~/...` doesn't expand inside markdown link URLs.
 

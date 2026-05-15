@@ -2,6 +2,52 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.5] — 2026-05-15
+
+**Hotfix: chat-reply file bullets now render as clickable markdown links on claude.ai web.**
+
+User report after v0.4.4: the bullet list Claude writes in chat after a run is plain text, not clickable. Users had to scroll up to the `present_files()` download block above the chat to access files — the inline bullets did nothing on click.
+
+Root cause: SKILL.md Pattern 1's mockup formatted filenames as bold text (`**filename.html**`), which renders as styled text but isn't a real link. claude.ai's chat renderer doesn't auto-link plain filenames or bold text — it only treats markdown link syntax (`[text](url)`) as clickable.
+
+### Fixed — Pattern 1 mockup file bullets are now real markdown links
+
+Each filename in the Pattern 1 bullet list is now a markdown link pointing to its absolute path under `/mnt/user-data/outputs/<app_slug>/`. Before/after:
+
+```diff
+- • **executive_summary.html** — start here, has the charts and verbatim quotes
++ • [executive_summary.html](/mnt/user-data/outputs/acme-notes/executive_summary.html) — start here, has the charts and verbatim quotes
+```
+
+The link target is the absolute sandbox path — same path the `present_files()` download buttons use. Clicking the filename inline now opens the file in the right-panel viewer, identical to clicking the download button above.
+
+Pattern 1 keeps both affordances:
+1. `present_files()` block above the chat — one-click download buttons
+2. Inline markdown links in the bullet list — click in chat to open in right panel
+
+### Changed — Rules section: explicit markdown-link requirement
+
+The "Never list plain filenames as the file affordance" rule got expanded with the exact requirement: **"each filename in the bullet list MUST be a markdown link: `[filename](/mnt/user-data/outputs/<app_slug>/filename)`. Plain text and bold-only filenames are NOT clickable in claude.ai chat."**
+
+### Why this didn't show up earlier
+
+In v0.3.x and v0.4.0-0.4.3, users typically interacted with the `present_files()` download-button block above the chat reply and rarely tried clicking the bullet list itself. The v0.4.4 user reported testing the inline click and finding it dead — surfacing a UX gap that had been there silently the whole time.
+
+### Update path
+
+```bash
+# Claude Code
+cd ~/.claude/skills/app-review-analyzer && git pull
+```
+
+**claude.ai web users**: re-download the v0.4.5 `.skill` zip from [Releases](https://github.com/ShanShafiq01/app-review-analyzer/releases/latest) and re-upload via Settings → Skills. The Pattern 1 mockup change ships inside the zip — Claude reads it on its next pipeline run.
+
+### One uncertainty (worth flagging)
+
+claude.ai's chat client renders markdown link syntax as clickable, but whether it routes clicks on `/mnt/user-data/outputs/...` paths to the right-panel viewer is a platform-implementation detail I cannot verify without testing on claude.ai directly. The mechanism *should* work because that's the same protected path `present_files()` uses, but if clicks fall back to "raw markdown view" or fail silently, the inline-clickable affordance won't fire (the `present_files()` download buttons remain as the working alternative). Report back after re-uploading v0.4.5 and we'll know.
+
+---
+
 ## [0.4.4] — 2026-05-15
 
 **Hotfix: folder path in chat reply was rendering as a broken clickable link + new auto-reveal-folder feature.**
