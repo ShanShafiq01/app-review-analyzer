@@ -64,6 +64,15 @@ When the run finishes interactively, the executive summary **auto-opens in your 
 
 Five options. Each is one self-contained block — copy, paste, hit Enter.
 
+### Before you start — what you need
+
+| Option | What's required |
+|---|---|
+| **Option A** (claude.ai web) | A [claude.ai](https://claude.ai) account + a web browser. **Nothing else.** No Python, no terminal. |
+| **Options B-E** (CLI) | **Python 3.10 or later** + **Git** (to clone the repo) + ~200MB free disk (for the venv + Chromium download) |
+
+Don't have Python 3.10+? [INSTALL.md](./INSTALL.md) has copy-paste install commands for every OS (`brew install python@3.13` on Mac, `winget install Python.Python.3.13` on Windows, `apt install python3.13` on Linux). Both Apple Silicon Macs and Windows-on-ARM machines need the **arm64 build** — the installer refuses to proceed with a mismatched-arch Python.
+
 | Your situation | Go to |
 |---|---|
 | You use **claude.ai** in a browser (no terminal) | **Option A** |

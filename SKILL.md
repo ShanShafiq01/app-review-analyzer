@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.4.2
+version: 0.4.3
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -101,11 +101,14 @@ The pipeline gives you everything you need. Read `result["top_findings"]` (a lis
 
 ### Pattern 1 — claude.ai web (sandboxed runtime)
 
+**⚠ CRITICAL — files MUST be written under `/mnt/user-data/outputs/`.** The chat UI's right-panel viewer only reads from that exact path. Files written anywhere else exist in the sandbox filesystem but show as **"File could not be read. It may have been deleted or moved, or it lives outside the session folder"** when the user clicks them. The pipeline now auto-routes outputs to `/mnt/user-data/outputs/<app_slug>/` when it detects the sandbox (since v0.4.3), so the default behavior is correct — but if you pass `--output` explicitly, **always use that prefix.**
+
 In this channel, files in `/mnt/user-data/outputs/<app_slug>/` are surfaced as one-click download buttons via `present_files()`. The user CANNOT click any plain filename in your chat text — only the official download buttons work. So:
 
-1. Default `--output` to `/mnt/user-data/outputs/<app_slug>/` when you detect the sandbox.
-2. Call `present_files()` with the generated file paths before writing your reply.
-3. Write your reply using this literal pattern (substitute the bold sections with real data from `result`):
+1. **Leave `output_dir` unset** — the pipeline auto-detects the sandbox and routes to `/mnt/user-data/outputs/<app_slug>/`. (Or, if you must set it explicitly, the path MUST start with `/mnt/user-data/outputs/`.)
+2. After the pipeline returns, check `result["warnings"]` — if you see `"files will be invisible in claude.ai's right-panel viewer"`, the path is wrong and the files are unreachable. Re-run with the correct path.
+3. Call `present_files()` with the generated file paths before writing your reply.
+4. Write your reply using this literal pattern (substitute the bold sections with real data from `result`):
 
 ```markdown
 ✓ Pulled **234 Play Store + 196 App Store** reviews for **Acme Notes** (430 total).

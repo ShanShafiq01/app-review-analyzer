@@ -122,8 +122,13 @@ def run_pipeline(
         "top_findings": [],
     }
 
+    # Track whether the caller explicitly chose an output dir. We use this below
+    # to decide if it's safe to re-route to the claude.ai sandbox path. If the
+    # caller passed an explicit path, we respect it (and warn if it won't render).
+    _user_set_output_dir = str(output_dir).rstrip("/") not in (".", "./output", "output")
     output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Note: mkdir is deferred until after app_display_name is resolved so we can
+    # re-route to /mnt/user-data/outputs/<slug>/ on claude.ai before creating dirs.
 
     if not play_id and not appstore_id:
         result["user_message"] = "No app IDs provided. Pass --play <package_name> and/or --appstore <numeric_id>."
@@ -197,6 +202,33 @@ def run_pipeline(
             or ios_metadata.get("title")
             or "Unknown App"
         )
+
+    # ─── claude.ai sandbox path auto-resolution ───
+    # claude.ai web's chat UI only displays files written under /mnt/user-data/outputs/.
+    # Files written anywhere else exist in the sandbox filesystem but the right-panel
+    # viewer reports "File could not be read. It may have been deleted or moved, or it
+    # lives outside the session folder." This block detects the sandbox and re-routes
+    # the default output_dir to a path the chat UI can serve. If the caller explicitly
+    # set output_dir to something outside the sandbox path, we respect their choice
+    # but log a clear warning.
+    SANDBOX_OUTPUTS = Path("/mnt/user-data/outputs")
+    if SANDBOX_OUTPUTS.is_dir():
+        if not _user_set_output_dir:
+            # Caller didn't override — auto-route to the path the sandbox UI can read.
+            output_dir = SANDBOX_OUTPUTS / _slug(app_display_name)
+            _log(f"  [claude.ai sandbox] outputs auto-routed to {output_dir}")
+        elif not str(output_dir.resolve()).startswith(str(SANDBOX_OUTPUTS)):
+            warn_msg = (
+                f"output_dir '{output_dir}' is outside /mnt/user-data/outputs/ — "
+                "files will be invisible in claude.ai's right-panel viewer "
+                "(\"File could not be read... lives outside the session folder\"). "
+                "Pass output_dir='/mnt/user-data/outputs/<app_slug>/' to fix."
+            )
+            _log(f"  WARNING: {warn_msg}")
+            result["warnings"].append(warn_msg)
+
+    # Now safe to create the directory — we know its final path.
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     if themes_name == "auto":
         category = play_metadata.get("category") or ios_metadata.get("category") or ""

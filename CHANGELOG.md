@@ -2,6 +2,53 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.3] — 2026-05-15
+
+**Hotfix combining three independent fixes:** a claude.ai-sandbox file-visibility bug, README prerequisites that were missing, and SKILL.md presentation guidance that wasn't strong enough about the sandbox output path.
+
+### Fixed — claude.ai sandbox file output path
+
+A real user hit this in production: ran the skill on claude.ai web against a real app, the pipeline succeeded, but every generated file showed **"File could not be read. It may have been deleted or moved, or it lives outside the session folder"** in the right-panel viewer.
+
+Root cause: claude.ai's chat UI only renders files written under `/mnt/user-data/outputs/`. The skill's default `output_dir="./output"` resolved to `/home/user/output/<app>/` inside the sandbox — which exists on the filesystem but is invisible to the UI.
+
+Fix: `scripts/run_pipeline.py` now auto-detects the claude.ai sandbox at runtime (by checking for `/mnt/user-data/outputs/`) and re-routes the default output path to `/mnt/user-data/outputs/<app_slug>/`. Files become visible in the right-panel viewer automatically.
+
+If a caller explicitly sets `output_dir` to a path outside `/mnt/user-data/outputs/` while running in the sandbox, the pipeline now appends a clear warning to `result["warnings"]`: *"files will be invisible in claude.ai's right-panel viewer."* So Claude can correct course on a re-run instead of silently shipping unreachable files.
+
+### Changed — SKILL.md sandbox path instruction now CRITICAL
+
+The Pattern 1 (claude.ai web) section used to bury the path requirement as a bullet inside a paragraph. v0.4.3 promotes it to a **⚠ CRITICAL** callout at the top of Pattern 1 with the exact error message users would see if the path is wrong. Plus an explicit instruction to check `result["warnings"]` before writing the reply.
+
+### Added — README "Before you start" prerequisites block
+
+INSTALL.md had detailed per-option prerequisite notes. README had ZERO. A user landing on the README would see the 5-option install table, pick their OS, run the command — and hit `python: command not found` or `git: command not found` with no warning.
+
+Added a "Before you start — what you need" block at the top of the README install section. Two-row table:
+- **Option A** (claude.ai web): a claude.ai account + browser. **Nothing else.**
+- **Options B-E** (CLI): Python 3.10+, git, ~200MB free disk for venv + Chromium.
+
+Plus a one-line callout pointing users at INSTALL.md for per-OS Python install commands (`brew install python@3.13`, `winget install Python.Python.3.13`, `apt install python3.13`), and a reminder that Apple Silicon Macs and Windows-on-ARM machines need the arm64 build.
+
+### Update path
+
+```bash
+# Claude Code (Mac / Linux)
+cd ~/.claude/skills/app-review-analyzer && git pull
+
+# Windows PowerShell
+cd $env:USERPROFILE\.claude\skills\app-review-analyzer
+git pull
+
+# Windows CMD
+cd %USERPROFILE%\.claude\skills\app-review-analyzer
+git pull
+```
+
+claude.ai web users on v0.4.x `.skill` zip: **strongly recommended to upgrade** — v0.4.3 fixes the file-output-path bug. Re-download v0.4.3 from Releases and re-upload via Settings → Skills.
+
+---
+
 ## [0.4.2] — 2026-05-14
 
 **Hotfix: stale version in README + INSTALL.md filename references; clarified skill name vs slash command.**
