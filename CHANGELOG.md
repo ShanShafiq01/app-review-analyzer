@@ -2,6 +2,54 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.6] — 2026-05-15
+
+**Three related fixes: auto-open now fires from Claude Code, Pattern 2 lists files, cross-platform reviewed by senior engineer.**
+
+### Fixed — auto-open now fires when Claude Code invokes the pipeline programmatically
+
+User reported: ran the skill in Claude Code on Mac, but the executive summary did NOT auto-open in the browser and Finder did NOT open the output folder. Root cause: the v0.4.4 auto-open block lived in `main()` and was gated on `sys.stdout.isatty() and sys.stdin.isatty()`. Claude in Claude Code calls `run_pipeline()` programmatically (bypassing `main()`), and subprocess invocations don't have a TTY — so both gates failed, both auto-opens silently no-op'd.
+
+Fix in `scripts/run_pipeline.py`:
+- Moved the auto-open block from `main()` into `run_pipeline()` itself so it fires for every caller (CLI, programmatic, Claude Code, etc.).
+- Dropped the TTY check entirely. Gated only on `auto_open=True` (parameter default) + claude.ai sandbox detection (`Path("/mnt/user-data/outputs").is_dir()`).
+- `main()` now passes `auto_open=not (args.no_open or args.quiet)` to honor user overrides.
+
+After this change, on macOS / Windows / Linux + Claude Code, both browser AND file manager pop up automatically when the pipeline finishes. Skipped automatically on claude.ai sandbox (no display server, no file manager). Skipped if caller passes `auto_open=False`, or CLI user passes `--no-open` or `--quiet`.
+
+### Fixed — Pattern 2 (Claude Code) chat reply now lists what was generated
+
+The v0.4.4 Pattern 2 mockup intentionally skipped enumerating files in chat, relying on the auto-opened browser + in-HTML Downloads section. That's a real visibility gap — users want to see at a glance what was produced. Pattern 2 mockup now includes an explicit "Files generated:" bullet list after the result+findings block with brief descriptions per file.
+
+Filenames use inline backticks (` `executive_summary.html` `) for monospace appearance, NOT `[name](file:///path)` markdown links. Reason: `file://` markdown links in Claude Code's VSCode extension chat open HTML as source text and don't handle xlsx at all. Backticked monospace bullets are reference-only; actual one-click access comes from the auto-opened browser + Finder + the in-HTML Downloads section.
+
+### Cross-platform review (senior engineer audit + polishes)
+
+Before shipping, ran a senior code review specifically for cross-platform correctness (macOS, Windows, Linux, claude.ai sandbox, Git Bash on Windows, WSL). Verdict: ship as-is, with 3 polishes folded into this release:
+
+- **Git Bash / MSYS / Cygwin Python support.** Extended `sys.platform == "win32"` checks to `sys.platform in ("win32", "cygwin", "msys")` in two places. If a Windows user installed MSYS Python (not python.org's) and runs from Git Bash, the pipeline still correctly invokes `explorer` and `start`, not `xdg-open`.
+- **Auto-open failure logging.** `webbrowser.open()` returning False (headless Linux, locked-down Windows with no default browser handler) now logs a clear message: *"[auto-open] No browser handler found — use the open command above"*. Same for file-manager `FileNotFoundError` (xdg-utils missing on minimal containers). Previously failed silently — user had no signal why the browser didn't pop up.
+- **Per-OS command table in SKILL.md Pattern 2.** Added explicit table showing `open` (macOS) vs `xdg-open` (Linux) vs `start <file>` + `explorer <folder>` (Windows). Pattern 2's mockup shows Mac syntax but is annotated with "lift from `result["user_message"]` verbatim" so Claude uses the OS-correct command from the pipeline output, not the Mac example.
+
+The senior reviewer verified that on Windows + Claude Code: (a) `webbrowser.open(Path(html).as_uri())` correctly produces `file:///C:/...` and hands it to the default browser via Windows registry, (b) `subprocess.Popen(["explorer", path])` correctly launches Explorer with the folder (including paths with spaces like `C:\Users\BS Admin\...`), (c) the chat reply still shows the file list. Same verification done for macOS Finder + Linux xdg-open. claude.ai sandbox is correctly skipped via the `/mnt/user-data/outputs/` marker check.
+
+### Update path
+
+```bash
+# Claude Code (Mac / Linux)
+cd ~/.claude/skills/app-review-analyzer && git pull
+
+# Windows PowerShell
+cd $env:USERPROFILE\.claude\skills\app-review-analyzer; git pull
+
+# Windows CMD
+cd %USERPROFILE%\.claude\skills\app-review-analyzer & git pull
+```
+
+claude.ai web users on v0.4.5: re-download the v0.4.6 `.skill` zip and re-upload via Settings → Skills if you want the updated Pattern 2 guidance (Pattern 1 unchanged, claude.ai web behavior unchanged otherwise).
+
+---
+
 ## [0.4.5] — 2026-05-15
 
 **Hotfix: chat-reply file bullets now render as clickable markdown links on claude.ai web.**

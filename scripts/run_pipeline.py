@@ -101,6 +101,7 @@ def run_pipeline(
     app_display_name=None,
     byline=None,
     use_llm=False,
+    auto_open=True,
     progress_callback=None,
 ):
     """Run the full pipeline. Always returns a result dict — never raises for
@@ -404,14 +405,87 @@ def run_pipeline(
     # file:// from https origin; VSCode chat opens HTML as source; terminals
     # can't navigate paths). The open command works everywhere. Once the HTML
     # is open, its Downloads section gives one-click access to xlsx/csv/json/md.
+    # Per-OS opener commands. Two are needed because Windows splits file-vs-folder:
+    #   macOS:   `open` handles both files and folders
+    #   Linux:   `xdg-open` handles both
+    #   Windows: `start <file>` opens HTML in default browser; `explorer <folder>`
+    #            opens the folder in a new Explorer window. Wrong binary = wrong behavior.
+    if sys.platform == "darwin":
+        file_opener, folder_opener = "open", "open"
+    elif sys.platform in ("win32", "cygwin", "msys"):
+        # Cover Git Bash / MSYS / Cygwin Python which can also be hosted on Windows.
+        # If a user installed MSYS Python (not python.org) and ran from Git Bash,
+        # sys.platform would be "msys" or "cygwin" — still Windows, still wants
+        # Explorer + the `start` command. Senior review M-2.
+        file_opener, folder_opener = "start", "explorer"
+    else:
+        file_opener, folder_opener = "xdg-open", "xdg-open"
+
     if primary_html and primary_html.exists():
-        opener = "open" if sys.platform == "darwin" else ("start" if sys.platform == "win32" else "xdg-open")
         msg_parts.append(f"\nThe executive summary should have opened in your browser. If not, run:")
-        msg_parts.append(f"  {opener} {primary_html.resolve()}")
+        msg_parts.append(f"  {file_opener} {primary_html.resolve()}")
+
+    # v0.4.6: also surface the folder-reveal command for cases where Finder/Explorer
+    # auto-open failed (headless container, missing xdg-utils on Linux, etc).
+    if output_dir.exists():
+        msg_parts.append(f"\nTo reveal all output files in Finder/Explorer:")
+        msg_parts.append(f"  {folder_opener} {output_dir.resolve()}")
 
     result["user_message"] = "\n".join(msg_parts)
 
     _log(result["user_message"])
+
+    # v0.4.6: Auto-open browser + Finder/Explorer for LOCAL runs (Claude Code,
+    # standalone CLI, etc.). The v0.4.4 implementation lived in main(), so it
+    # only fired when invoked as `python -m scripts.run_pipeline` from a
+    # terminal — Claude in Claude Code calls run_pipeline() programmatically
+    # and bypassed main() entirely, so neither browser nor Finder ever opened.
+    # Moving the logic in here makes it fire for every caller.
+    #
+    # Gating:
+    # - Skipped on claude.ai sandbox (the /mnt/user-data/outputs/ marker exists)
+    #   because there's no browser or file manager in the sandbox to open.
+    # - Skipped if caller passes auto_open=False (CI, scripted, --no-open).
+    # - Each subprocess call wrapped in try/except so headless containers /
+    #   missing display / missing tooling silently no-op rather than crashing.
+    sandbox = Path("/mnt/user-data/outputs").is_dir()
+    if auto_open and not sandbox:
+        # Browser: executive summary HTML (or whichever deep-dive is primary)
+        if primary_html and primary_html.exists():
+            try:
+                import webbrowser
+                # webbrowser.open returns True if a handler was found and launched.
+                # On headless Linux / locked-down Windows with no default handler,
+                # it returns False silently. Surface that so the user knows why
+                # nothing popped up (senior review H-2/H-3).
+                if not webbrowser.open(Path(primary_html).as_uri()):
+                    _log("  [auto-open] No browser handler found — use the open command above to launch the report manually.")
+            except Exception as exc:
+                _log(f"  [auto-open] Browser launch failed ({type(exc).__name__}) — use the open command above to launch the report manually.")
+
+        # Native file manager: Finder (macOS) / Explorer (Windows) / xdg-open (Linux)
+        try:
+            import subprocess
+            output_dir_str = str(output_dir.resolve())
+            if sys.platform == "darwin":
+                subprocess.Popen(["open", output_dir_str])
+            elif sys.platform in ("win32", "cygwin", "msys"):
+                # Cover Git Bash / MSYS / Cygwin Python which all live on Windows.
+                # senior review M-2: native Windows is the common case, but if the
+                # user installed MSYS Python they still want Explorer, not xdg-open.
+                subprocess.Popen(["explorer", output_dir_str])
+            else:
+                # Linux / BSD: xdg-open is the freedesktop standard.
+                # Silently fails on headless containers without xdg-utils.
+                subprocess.Popen(["xdg-open", output_dir_str])
+        except FileNotFoundError:
+            # No file-manager binary on PATH (e.g. xdg-utils not installed,
+            # headless Docker). Tell the user — they have the manual fallback
+            # command in the user_message anyway (senior review H-2/H-3).
+            _log("  [auto-open] File manager not available — use the folder-reveal command above to open the output directory manually.")
+        except Exception as exc:
+            _log(f"  [auto-open] File manager launch failed ({type(exc).__name__}) — use the folder-reveal command above.")
+
     return result
 
 
@@ -469,6 +543,11 @@ Examples:
 
     callback = (lambda m: None) if args.quiet else None
 
+    # v0.4.6: auto-open browser + Finder/Explorer now happens INSIDE run_pipeline()
+    # so it fires regardless of how the pipeline is invoked (CLI here, or
+    # programmatic call from Claude Code which previously bypassed main()
+    # entirely and missed the auto-open). Just pass the --no-open / --quiet
+    # CLI flag through as auto_open=False when set.
     result = run_pipeline(
         play_id=play_id,
         appstore_id=appstore_id,
@@ -480,50 +559,8 @@ Examples:
         byline=args.byline,
         use_llm=args.llm_tagging,
         progress_callback=callback,
+        auto_open=not (args.no_open or args.quiet),
     )
-
-    # Auto-open the primary report in a browser when we're in interactive use.
-    # Skipped when: user passed --no-open, --quiet, or stdout/stdin is not a TTY (CI, pipes).
-    primary = result.get("primary_output")
-    if (primary
-            and not args.no_open
-            and not args.quiet
-            and sys.stdout.isatty()
-            and sys.stdin.isatty()):
-        try:
-            import webbrowser
-            # Path.as_uri() correctly handles Windows drive letters and backslashes
-            # (file:///C:/Users/...). String-concat of f"file://{path}" produces an
-            # invalid URI on Windows and most browsers silently refuse to open it.
-            webbrowser.open(Path(primary).as_uri())
-        except Exception:
-            pass  # opening is a nicety, not a guarantee
-
-    # v0.4.4: Auto-reveal the output folder in the user's native file manager
-    # alongside the browser auto-open. Answers the "can we open Finder here?"
-    # question for Claude Code users. Same gating as the browser block above —
-    # skipped in CI, headless, --no-open, --quiet, and in the claude.ai sandbox
-    # (which doesn't pass the TTY check anyway, and has no file manager UI).
-    output_dir_str = result.get("output_dir")
-    if (output_dir_str
-            and not args.no_open
-            and not args.quiet
-            and sys.stdout.isatty()
-            and sys.stdin.isatty()):
-        try:
-            import subprocess
-            if sys.platform == "darwin":
-                subprocess.Popen(["open", output_dir_str])
-            elif sys.platform == "win32":
-                subprocess.Popen(["explorer", output_dir_str])
-            else:
-                # Linux / BSD / other Unix — xdg-open is the freedesktop standard.
-                # Fails silently if xdg-utils isn't installed (headless containers,
-                # minimal distros). The user can still copy-paste the open command
-                # from the user_message instead.
-                subprocess.Popen(["xdg-open", output_dir_str])
-        except Exception:
-            pass  # revealing the folder is a nicety, not a guarantee
 
     # Update-check banner. Cached for 24h, fails silently on any error
     # (network down, repo not yet public, parse failure). Only prints when a

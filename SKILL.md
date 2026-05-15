@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.4.5
+version: 0.4.6
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -64,6 +64,9 @@ result = run_pipeline(
     formats=["html", "excel", "csv"],
     output_dir="./output/<app_slug>",
     app_display_name="App Name",     # optional — auto-detected from metadata
+    # auto_open defaults to True — on Claude Code the pipeline auto-opens
+    # the executive summary in the browser AND reveals the output folder in
+    # Finder/Explorer. Skipped automatically on claude.ai sandbox.
 )
 ```
 
@@ -135,7 +138,7 @@ If `present_files()` fails or wasn't called (sandbox issue), use Pattern 3 inste
 
 ### Pattern 2 — Claude Code (VSCode extension, terminal Claude, anywhere with `webbrowser.open`)
 
-In this channel, the pipeline already auto-opened the executive summary in the user's default browser, and the HTML itself has a working Downloads section. Your job is to orient them, not duplicate the file list. Write your reply using this literal pattern:
+In this channel, the pipeline already auto-opened the executive summary in the user's default browser and Finder/Explorer to the output folder. Your job is to orient them AND list what was generated so they have a quick reference in chat. Write your reply using this literal pattern. **Always include the "Files generated" bullet list** — even though the browser auto-opened, users want to see at a glance what was produced without scrolling the HTML or switching to Finder.
 
 ```markdown
 ✓ Pulled **234 Play Store + 196 App Store** reviews for **Acme Notes** (430 total).
@@ -145,9 +148,16 @@ In this channel, the pipeline already auto-opened the executive summary in the u
 • **62 reviews name subscription friction — the #1 complaint across both stores**
 • **47% of 5-star reviews mention streak — the strongest loyalty signal**
 
-📊 **Your executive summary should have opened in your browser, and Finder/Explorer
-should have opened to the output folder.** Scroll to the **Downloads** section at
-the bottom of the executive summary for the Excel workbook, CSVs, and raw JSON.
+📊 **Your executive summary opened in your browser, and Finder/Explorer opened to the output folder.**
+
+**Files generated:**
+• `executive_summary.html` — start here, cross-store synthesis with charts and verbatim quotes
+• `playstore_deepdive.html` — Android-only thematic breakdown
+• `appstore_deepdive.html` — iOS-only thematic breakdown
+• `acme_notes_reviews.xlsx` — 5-sheet analyst workbook
+• `all_reviews.csv`, `playstore_reviews.csv`, `appstore_reviews.csv` — raw exports
+
+Scroll to the **Downloads** section at the bottom of the executive summary for one-click access to every file inside the browser.
 
 If your browser didn't open, copy and run this:
 
@@ -161,14 +171,24 @@ To reveal all output files in Finder/Explorer/file manager:
 open /Users/you/output/acme-notes/
 \`\`\`
 
-(Use `open` on macOS, `explorer` on Windows, `xdg-open` on Linux. Both blocks
-get copy buttons in every chat client — never paste the folder path as plain text.)
-
 Want a different angle? I can re-run with a specific country, focus on a date
 range, or compare against a competitor.
 ```
 
-The fenced `open` block gets a copy button in every chat client. Use `open` on macOS, `xdg-open` on Linux, `start` on Windows.
+**⚠ Per-OS commands — lift from `result["user_message"]` verbatim, don't substitute yourself.** The mockup above shows macOS syntax (`open`), but the pipeline's `user_message` already contains the correct command for the user's actual OS (it picks based on `sys.platform`). The per-OS mapping for reference:
+
+|  | Open HTML file | Open folder |
+|---|---|---|
+| **macOS** | `open file.html` | `open folder/` |
+| **Linux** | `xdg-open file.html` | `xdg-open folder/` |
+| **Windows** | `start file.html` (NOT `open`, NOT `explorer`) | `explorer folder\` (NOT `start`) |
+
+The file-vs-folder distinction matters on **Windows**: `start file.html` opens the HTML in the default browser; `explorer folder` opens the folder in a new Explorer window. Swapping them produces wrong behavior. `result["user_message"]` ships both correctly — just paste the lines as-is.
+
+Notes on the file list:
+- **Wrap filenames in backticks** (` `executive_summary.html` `) — inline code formatting gives them a monospace look and prevents claude.ai chat from auto-linking them as path-shaped strings (which would error out the same way folder paths do).
+- **Do NOT make them markdown links to `file:///...` URIs** — those don't open files in their associated apps reliably in Claude Code's VSCode extension chat (HTML opens as source text, xlsx doesn't open at all). The bullets are reference-only; actual opening happens via the auto-opened browser + Finder/Explorer + the in-HTML Downloads section.
+- **Always include the description after the —** so the user knows what each file is for without opening it.
 
 ### Pattern 3 — Fallback (sandbox failed, or no browser available)
 
