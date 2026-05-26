@@ -1,16 +1,17 @@
 # Installation
 
-Pick the option that matches your setup. All five are first-class — no "primary" and "fallback." Each block is one self-contained copy-paste unit.
+Pick the option that matches your setup. All six are first-class — no "primary" and "fallback." Each block is one self-contained copy-paste unit.
 
 | Your situation | Go to |
 |---|---|
 | You use **claude.ai** in a browser (no terminal) | **Option A** |
-| You're on a **Mac** | **Option B** |
-| You're on **Windows + PowerShell** | **Option C** |
-| You're on **Windows + Command Prompt (CMD)** | **Option D** |
-| You're on **Linux** | **Option E** |
+| You use **Claude Code** (any OS) — easiest path | **Option F (plugin)** |
+| You prefer git clone on a **Mac** | **Option B** |
+| You prefer git clone on **Windows + PowerShell** | **Option C** |
+| You prefer git clone on **Windows + Command Prompt (CMD)** | **Option D** |
+| You prefer git clone on **Linux** | **Option E** |
 
-**Python 3.10 or later** is required for Options B-E. claude.ai web (Option A) runs everything Anthropic-side — no Python needed locally.
+**Python 3.10 or later** is required for Options B-F. claude.ai web (Option A) runs everything Anthropic-side — no Python needed locally.
 
 ---
 
@@ -29,6 +30,59 @@ For anyone using claude.ai in a browser. Zero command-line. ~60 seconds end-to-e
 Why this option exists: every other option requires a terminal. This one doesn't. If you've never opened Terminal/PowerShell/CMD, choose this.
 
 **Tradeoffs:** PDF generation doesn't work in claude.ai's sandbox (it requires Chromium). Use HTML or Excel output instead — they have all the same data plus interactive features.
+
+---
+
+## Option F — Claude Code plugin marketplace (one-command install)
+
+For anyone using **Claude Code** on any OS — Mac, Windows, Linux. No git clone, no manual `cd ~/.claude/skills/...` path.
+
+In your Claude Code session, run:
+
+```
+/plugin marketplace add ShanShafiq01/app-review-analyzer
+/plugin install app-review-analyzer@app-review-analyzer
+```
+
+Claude Code fetches the latest release from this repo and installs it under `~/.claude/plugins/cache/app-review-analyzer/app-review-analyzer/<version>/`.
+
+Then install the Python deps (one-time — Claude Code plugins can't auto-install pip packages):
+
+```bash
+# macOS / Linux
+cd ~/.claude/plugins/cache/app-review-analyzer/app-review-analyzer/0.5.0 && ./setup.sh
+
+# Windows PowerShell
+cd "$env:USERPROFILE\.claude\plugins\cache\app-review-analyzer\app-review-analyzer\0.5.0"; .\setup.ps1
+```
+
+Verify the plugin is loaded:
+
+```
+/plugin list
+```
+
+You should see `app-review-analyzer` listed as installed. Now try it:
+
+- *Conversational:* `Analyze reviews for Duolingo on both stores`
+- *Slash command:* `/review-analyze com.duolingo`
+
+**Updating the plugin** (when a new release ships):
+
+```
+/plugin marketplace update app-review-analyzer
+```
+
+After the update, re-run `./setup.sh` if `requirements.txt` changed in the new version. Most patch releases don't change deps.
+
+**Uninstalling:**
+
+```
+/plugin uninstall app-review-analyzer@app-review-analyzer
+/plugin marketplace remove app-review-analyzer
+```
+
+**Tradeoffs:** Same as Options B-E — Python 3.10+ required, ~200MB disk for the venv + Chromium if you enable PDF output. Plus one extra setup step (`./setup.sh`) compared to a "true" zero-install plugin, because Claude Code plugins don't have an install hook for pip. Worth it for the simpler discovery + update path.
 
 ---
 

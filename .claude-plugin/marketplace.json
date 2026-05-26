@@ -1,0 +1,16 @@
+{
+  "name": "app-review-analyzer",
+  "description": "App Review Analyzer — competitive mobile review intelligence skill by Shan Shafiq",
+  "owner": { "name": "Shan Shafiq" },
+  "plugins": [
+    {
+      "name": "app-review-analyzer",
+      "description": "Scrape and analyze App Store and Play Store reviews",
+      "version": "0.5.0",
+      "source": "./",
+      "author": { "name": "Shan Shafiq" },
+      "homepage": "https://github.com/ShanShafiq01/app-review-analyzer",
+      "license": "MIT"
+    }
+  ]
+}

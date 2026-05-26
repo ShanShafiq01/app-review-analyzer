@@ -1,0 +1,10 @@
+{
+  "name": "app-review-analyzer",
+  "description": "Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON.",
+  "version": "0.5.0",
+  "author": { "name": "Shan Shafiq" },
+  "homepage": "https://github.com/ShanShafiq01/app-review-analyzer",
+  "repository": "https://github.com/ShanShafiq01/app-review-analyzer",
+  "license": "MIT",
+  "keywords": ["app-store", "play-store", "reviews", "analysis", "mobile", "aso", "competitive-intel"]
+}

@@ -2,6 +2,65 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] — 2026-05-26
+
+**Minor bump: Claude Code plugin + single-plugin marketplace. The `.skill` zip distribution for claude.ai web is unchanged.**
+
+Until now, Claude Code users installed by `git clone`ing the repo into `~/.claude/skills/app-review-analyzer/` and running `./setup.sh`. That works but isn't the canonical Claude Code distribution path. v0.5.0 ships plugin manifests so the install becomes two slash commands:
+
+```
+/plugin marketplace add ShanShafiq01/app-review-analyzer
+/plugin install app-review-analyzer@app-review-analyzer
+```
+
+Then one manual `./setup.sh` step for Python deps (the plugin spec has no auto-install hook for pip packages — documented in INSTALL.md Option F).
+
+### Added — plugin scaffolding
+
+- **`.claude-plugin/plugin.json`** — plugin manifest with `name`, `description`, `version: 0.5.0`, `author`, `homepage`, `repository`, `license`, `keywords`.
+- **`.claude-plugin/marketplace.json`** — single-plugin marketplace where this repo IS the marketplace, listing itself as the one plugin via `"source": "./"`. Pattern matched against `~/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/.claude-plugin/marketplace.json` (a shipped Anthropic-curated example).
+
+### Changed — slash command location
+
+- **Moved `.claude/commands/review-analyze.md` → `commands/review-analyze.md`.** Plugin spec requires command files at the plugin root, not inside `.claude/`. File contents unchanged.
+
+### Added — Option F in install docs
+
+- **README.md** — new "Option F — Claude Code plugin marketplace" section as the recommended path for Claude Code users. Options B-E demoted to "if you prefer git clone."
+- **INSTALL.md** — detailed Option F section with install, verify, update, and uninstall commands.
+
+### Unchanged — claude.ai web users
+
+The `.skill` zip distribution is **identical** in behavior to v0.4.7. The new `.claude-plugin/` and `commands/` directories are present inside the v0.5.0 `.skill` zip but are inert on claude.ai (they're Claude Code plugin scaffolding; claude.ai web reads only SKILL.md). Existing claude.ai users can re-upload v0.5.0 for the SKILL.md version bump, but no behavior changes.
+
+### Why v0.5.0 and not v0.4.8 or v1.0.0
+
+- **Not v0.4.8** — the install model for Claude Code users changes. That's a contract bump, not a patch.
+- **Not v1.0.0** — v1.0 is reserved for "battle-tested + community marketplace acceptance." That comes after 2-3 weeks of v0.5.x in the wild plus an Anthropic community marketplace submission.
+
+### Update path
+
+```bash
+# Existing Claude Code git-clone users (Options B-E)
+cd ~/.claude/skills/app-review-analyzer && git pull
+
+# New Claude Code plugin users (Option F)
+/plugin marketplace add ShanShafiq01/app-review-analyzer
+/plugin install app-review-analyzer@app-review-analyzer
+cd ~/.claude/plugins/cache/app-review-analyzer/app-review-analyzer/0.5.0 && ./setup.sh
+
+# claude.ai web users (Option A)
+# Re-download the v0.5.0 .skill zip from Releases and re-upload. Optional — no behavior changes.
+```
+
+### Honest scope boundary
+
+- **Anthropic community marketplace submission** (`anthropics/claude-plugins-community`) — deferred. Self-host first, stabilize for 2-3 weeks, submit after real-user feedback.
+- **Multi-plugin umbrella repo** — deferred. When skill #2 (pricing-page-analyzer or landing-page-auditor) is ready, the marketplace can move to `ShanShafiq01/claude-plugins` and host both. For now, this repo remains its own marketplace.
+- **Windows verification** — still pending. The plugin install commands SHOULD work on Windows (cross-platform paths verified during code review), but nobody has run `/plugin install` end-to-end on real Windows yet. Mac + Linux verified locally.
+
+---
+
 ## [0.4.7] — 2026-05-15
 
 **Hotfix: Pattern 2 (Claude Code) HTML files are now `file://` markdown links that open in Claude Code Desktop's preview pane.**

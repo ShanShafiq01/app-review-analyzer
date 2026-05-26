@@ -62,24 +62,26 @@ When the run finishes interactively, the executive summary **auto-opens in your 
 
 ## Install — pick the path that matches you
 
-Five options. Each is one self-contained block — copy, paste, hit Enter.
+Six options. Each is one self-contained block — copy, paste, hit Enter.
 
 ### Before you start — what you need
 
 | Option | What's required |
 |---|---|
 | **Option A** (claude.ai web) | A [claude.ai](https://claude.ai) account + a web browser. **Nothing else.** No Python, no terminal. |
-| **Options B-E** (CLI) | **Python 3.10 or later** + **Git** (to clone the repo) + ~200MB free disk (for the venv + Chromium download) |
+| **Option F** (Claude Code plugin) | Claude Code installed + **Python 3.10 or later** (for the analyzer scripts the plugin ships) |
+| **Options B-E** (CLI / git clone) | **Python 3.10 or later** + **Git** (to clone the repo) + ~200MB free disk (for the venv + Chromium download) |
 
 Don't have Python 3.10+? [INSTALL.md](./INSTALL.md) has copy-paste install commands for every OS (`brew install python@3.13` on Mac, `winget install Python.Python.3.13` on Windows, `apt install python3.13` on Linux). Both Apple Silicon Macs and Windows-on-ARM machines need the **arm64 build** — the installer refuses to proceed with a mismatched-arch Python.
 
 | Your situation | Go to |
 |---|---|
 | You use **claude.ai** in a browser (no terminal) | **Option A** |
-| You're on a **Mac** | **Option B** |
-| You're on **Windows + PowerShell** | **Option C** |
-| You're on **Windows + Command Prompt (CMD)** | **Option D** |
-| You're on **Linux** | **Option E** |
+| You use **Claude Code** (any OS) — easiest path | **Option F (plugin)** |
+| You prefer git clone on a **Mac** | **Option B** |
+| You prefer git clone on **Windows + PowerShell** | **Option C** |
+| You prefer git clone on **Windows + Command Prompt (CMD)** | **Option D** |
+| You prefer git clone on **Linux** | **Option E** |
 
 ### Option A — claude.ai web upload (zero terminal, recommended for non-developers)
 
@@ -87,6 +89,25 @@ Don't have Python 3.10+? [INSTALL.md](./INSTALL.md) has copy-paste install comma
 2. Open [claude.ai](https://claude.ai) → click your name → **Settings** → **Capabilities** → **Skills**
 3. Click **Upload skill** → drop the `.skill` file in
 4. Done. In any chat, try: *"Analyze reviews for &lt;app name&gt; on both stores"*
+
+### Option F — Claude Code plugin marketplace (recommended for Claude Code users)
+
+In your Claude Code session, run these two commands:
+
+```
+/plugin marketplace add ShanShafiq01/app-review-analyzer
+/plugin install app-review-analyzer@app-review-analyzer
+```
+
+Then install the Python deps once (the plugin ships the analyzer scripts but Claude Code plugins can't auto-install Python packages):
+
+```bash
+cd ~/.claude/plugins/cache/app-review-analyzer/app-review-analyzer/0.5.0 && ./setup.sh
+```
+
+On Windows, use `.\setup.ps1` from inside the same plugin cache directory.
+
+Done. In any new chat, try *"Analyze reviews for &lt;app name&gt; on both stores"*, or use the `/review-analyze` slash command directly. Update later with `/plugin marketplace update app-review-analyzer`.
 
 ### Option B — macOS (bash or zsh)
 
