@@ -33,47 +33,35 @@ Why this option exists: every other option requires a terminal. This one doesn't
 
 ---
 
-## Option F — Claude Code plugin marketplace (one-command install)
+## Option F — Claude Code plugin marketplace (zero manual steps)
 
-For anyone using **Claude Code** on any OS — Mac, Windows, Linux. No git clone, no manual `cd ~/.claude/skills/...` path.
+For anyone using **Claude Code** on any OS — Mac, Windows, Linux. No git clone, no manual setup.
 
-In your Claude Code session, run:
+In your Claude Code session, run two commands:
 
 ```
 /plugin marketplace add ShanShafiq01/app-review-analyzer
 /plugin install app-review-analyzer@app-review-analyzer
 ```
 
-Claude Code fetches the latest release from this repo and installs it under `~/.claude/plugins/cache/app-review-analyzer/app-review-analyzer/<version>/`.
+Claude Code fetches the latest release and installs it under `~/.claude/plugins/cache/app-review-analyzer/app-review-analyzer/<version>/`. Verify with `/plugin list` — you should see `app-review-analyzer` as installed.
 
-Then install the Python deps (one-time — Claude Code plugins can't auto-install pip packages):
-
-```bash
-# macOS / Linux
-cd ~/.claude/plugins/cache/app-review-analyzer/app-review-analyzer/0.5.0 && ./setup.sh
-
-# Windows PowerShell
-cd "$env:USERPROFILE\.claude\plugins\cache\app-review-analyzer\app-review-analyzer\0.5.0"; .\setup.ps1
-```
-
-Verify the plugin is loaded:
-
-```
-/plugin list
-```
-
-You should see `app-review-analyzer` listed as installed. Now try it:
+That's the entire install. Try it:
 
 - *Conversational:* `Analyze reviews for Duolingo on both stores`
 - *Slash command:* `/review-analyze com.duolingo`
 
-**Updating the plugin** (when a new release ships):
+**What happens under the hood on first invocation.** The plugin's slash command body checks for a `.venv/` inside the plugin directory. If it's missing (always true on first run), Claude runs `setup.sh` automatically — creates a venv, runs pip install for `google-play-scraper`, `pandas`, `openpyxl`, optionally Playwright + Chromium for PDF. Takes 30-60 seconds and shows a clear `"First-time setup — installing Python dependencies..."` message. Every subsequent invocation skips this and runs instantly.
+
+This means **the user does nothing manual** — the bootstrap is fully automated via the slash command body, leveraging Claude Code's `${CLAUDE_PLUGIN_ROOT}` environment variable. Python 3.10+ still needs to be installed system-wide (the plugin can't bootstrap Python itself), but the deps are handled.
+
+**Updating:**
 
 ```
 /plugin marketplace update app-review-analyzer
 ```
 
-After the update, re-run `./setup.sh` if `requirements.txt` changed in the new version. Most patch releases don't change deps.
+If `requirements.txt` changed in the new version, the next `/review-analyze` invocation will detect the missing/stale venv and re-bootstrap automatically. No manual action.
 
 **Uninstalling:**
 
@@ -82,7 +70,7 @@ After the update, re-run `./setup.sh` if `requirements.txt` changed in the new v
 /plugin marketplace remove app-review-analyzer
 ```
 
-**Tradeoffs:** Same as Options B-E — Python 3.10+ required, ~200MB disk for the venv + Chromium if you enable PDF output. Plus one extra setup step (`./setup.sh`) compared to a "true" zero-install plugin, because Claude Code plugins don't have an install hook for pip. Worth it for the simpler discovery + update path.
+**Tradeoffs:** Python 3.10+ required system-wide (Mac: `brew install python@3.13`, Windows: `winget install Python.Python.3.13`, Linux: `apt install python3.13`). First invocation is slower (~30-60s) because of the dep install — subsequent invocations are normal speed. ~200MB disk usage for the venv + Chromium if PDF output is enabled.
 
 ---
 

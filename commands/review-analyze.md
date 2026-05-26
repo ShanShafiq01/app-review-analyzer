@@ -32,15 +32,40 @@ When invoked, follow the App Review Analyzer skill workflow:
    - HTML + Excel + CSV *(default — recommended)*
    - Everything (HTML + PDF + Excel + CSV + Markdown + JSON)
 
-4. **Run the pipeline:**
+4. **Run the pipeline.** If installed as a Claude Code plugin (`${CLAUDE_PLUGIN_ROOT}` is set), use the plugin's bundled Python. The bash block auto-bootstraps the venv on first run — no manual setup step needed.
+
    ```bash
-   python -m scripts.run_pipeline \
+   # Resolve the plugin directory (falls back to cwd for git-clone installs)
+   PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT:-$(pwd)}"
+
+   # Find the venv Python (Mac/Linux uses .venv/bin/, Windows uses .venv/Scripts/)
+   PY="$PLUGIN_DIR/.venv/bin/python"
+   [ -x "$PY" ] || PY="$PLUGIN_DIR/.venv/Scripts/python.exe"
+
+   # First-run bootstrap: install Python deps if the venv doesn't exist yet
+   if [ ! -x "$PY" ]; then
+     echo "First-time setup — installing Python dependencies (~30-60 seconds)..."
+     if [ -f "$PLUGIN_DIR/setup.sh" ]; then
+       bash "$PLUGIN_DIR/setup.sh"
+     elif [ -f "$PLUGIN_DIR/setup.ps1" ]; then
+       powershell -ExecutionPolicy Bypass -File "$PLUGIN_DIR/setup.ps1"
+     fi
+     # Re-resolve PY after setup
+     PY="$PLUGIN_DIR/.venv/bin/python"
+     [ -x "$PY" ] || PY="$PLUGIN_DIR/.venv/Scripts/python.exe"
+   fi
+
+   # Run the pipeline. PYTHONPATH lets `-m scripts.run_pipeline` find the package
+   # without changing cwd, so --output is relative to the user's current directory.
+   PYTHONPATH="$PLUGIN_DIR" "$PY" -m scripts.run_pipeline \
      --play <package_name> \
      --appstore <numeric_id> \
      --themes auto \
      --formats html,excel,csv \
      --output ./output/<app_slug>
    ```
+
+   The bootstrap is **idempotent and automatic** — the second `/review-analyze` call (and every call after) skips setup instantly because the venv already exists.
 
 5. **Present the files** so the user can actually open them. Channel-dependent:
    - **claude.ai (sandboxed):** write outputs to `/mnt/user-data/outputs/<app_slug>/` and call `present_files` — gives the user one-click download buttons in chat.

@@ -2,6 +2,63 @@
 
 All notable changes documented here. Format roughly follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.1] — 2026-05-26
+
+**Fast follow on v0.5.0: zero manual steps for plugin install. The bootstrap is now fully automated.**
+
+v0.5.0 shipped the Claude Code plugin format but required a manual `cd ~/.claude/plugins/.../0.5.0 && ./setup.sh` step to install Python dependencies. User feedback was clear: that's a manual step too many. v0.5.1 removes it.
+
+### How it works
+
+The slash command body (`commands/review-analyze.md`) and SKILL.md now embed a self-bootstrapping bash block that:
+
+1. Resolves the plugin directory via `${CLAUDE_PLUGIN_ROOT}` (the env var Claude Code exposes to plugin code — verified against the superpowers plugin's `hooks/hooks.json` for precedent)
+2. Checks if `.venv/bin/python` (Mac/Linux) or `.venv/Scripts/python.exe` (Windows) exists
+3. If missing, runs `setup.sh` (or `setup.ps1` on Windows) before continuing — Claude tells the user *"First-time setup — installing Python dependencies (~30-60 seconds)..."* during this
+4. Uses `PYTHONPATH="$PLUGIN_DIR"` to invoke `-m scripts.run_pipeline` without changing cwd, so `--output ./output/<app_slug>` stays relative to the user's current directory (not the plugin's cache dir)
+
+Result: install becomes **two commands, no third step**:
+
+```
+/plugin marketplace add ShanShafiq01/app-review-analyzer
+/plugin install app-review-analyzer@app-review-analyzer
+```
+
+After that, *"Analyze reviews for Notion"* or `/review-analyze com.duolingo` Just Works — first invocation takes an extra 30-60s for the bootstrap, every subsequent invocation runs at normal speed.
+
+### Changed
+
+- **`commands/review-analyze.md`** — Step 4 ("Run the pipeline") rewritten with the bootstrap-aware bash block (~25 lines of cross-platform shell).
+- **`SKILL.md`** — the "Or as a shell command" block in Step 3 mirrors the same pattern, so conversational invocation (no slash command) gets the same auto-bootstrap.
+- **`README.md`** Option F — removed the manual `cd ... && ./setup.sh` step; replaced with "What happens on first invocation" explanation.
+- **`INSTALL.md`** Option F — restructured around "zero manual steps." Documents the bootstrap mechanics for the curious.
+
+### Unchanged
+
+- The bootstrap script itself (`setup.sh` / `setup.ps1` / `install.py`) — same code, just invoked automatically now.
+- Plugin manifests (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`) — `version` bumped to 0.5.1 in both. No structural changes.
+- claude.ai web behavior — `.skill` zip still works identically. Pattern 1 (claude.ai) doesn't touch the bootstrap path because claude.ai's sandbox handles Python deps differently.
+
+### Update path
+
+For users on v0.5.0:
+
+```
+/plugin marketplace update app-review-analyzer
+```
+
+Next `/review-analyze` invocation will detect any stale venv state and re-bootstrap if needed. No manual action.
+
+For users not yet installed: just run the two install commands above. The "no third step" promise applies from v0.5.1 onward.
+
+### Honest scope
+
+- **Python 3.10+** still has to be installed system-wide. The plugin bootstraps deps via pip into a venv but can't bootstrap Python itself. INSTALL.md still documents `brew install python@3.13` / `winget install Python.Python.3.13` / `apt install python3.13` as prereqs.
+- **First-invocation slowness** (~30-60s) is unavoidable — that's pip downloading packages plus optionally ~150MB of Chromium. The progress message makes it clear what's happening.
+- **Windows still untested** end-to-end as of v0.5.1. The bash bootstrap uses `[ -x "...Scripts/python.exe" ]` to detect Windows venv layout and falls back to `powershell setup.ps1`. Should work; needs a real Windows verification before claiming "Windows verified."
+
+---
+
 ## [0.5.0] — 2026-05-26
 
 **Minor bump: Claude Code plugin + single-plugin marketplace. The `.skill` zip distribution for claude.ai web is unchanged.**

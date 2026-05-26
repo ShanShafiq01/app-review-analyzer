@@ -99,15 +99,9 @@ In your Claude Code session, run these two commands:
 /plugin install app-review-analyzer@app-review-analyzer
 ```
 
-Then install the Python deps once (the plugin ships the analyzer scripts but Claude Code plugins can't auto-install Python packages):
+That's it. Done. In any new chat, try *"Analyze reviews for &lt;app name&gt; on both stores"*, or use the `/review-analyze` slash command directly.
 
-```bash
-cd ~/.claude/plugins/cache/app-review-analyzer/app-review-analyzer/0.5.0 && ./setup.sh
-```
-
-On Windows, use `.\setup.ps1` from inside the same plugin cache directory.
-
-Done. In any new chat, try *"Analyze reviews for &lt;app name&gt; on both stores"*, or use the `/review-analyze` slash command directly. Update later with `/plugin marketplace update app-review-analyzer`.
+**What happens on first invocation:** the plugin auto-installs its Python dependencies (~30-60 seconds, one time only). You'll see a `"First-time setup — installing Python dependencies..."` message. Subsequent invocations skip this and run instantly. Update later with `/plugin marketplace update app-review-analyzer`.
 
 ### Option B — macOS (bash or zsh)
 

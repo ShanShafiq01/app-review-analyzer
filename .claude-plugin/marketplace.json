@@ -6,7 +6,7 @@
     {
       "name": "app-review-analyzer",
       "description": "Scrape and analyze App Store and Play Store reviews",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "source": "./",
       "author": { "name": "Shan Shafiq" },
       "homepage": "https://github.com/ShanShafiq01/app-review-analyzer",

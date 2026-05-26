@@ -1,6 +1,6 @@
 ---
 name: app-review-analyzer
-version: 0.5.0
+version: 0.5.1
 license: MIT
 description: Scrape and analyze App Store and Google Play Store reviews for any mobile app, then generate editorial-grade reports in HTML, PDF, Excel, CSV, Markdown, or JSON. Use whenever the user wants to analyze, audit, compare, or report on mobile app reviews — including casual phrasings like "what are users saying about X" or "pull reviews for Y", and including raw App Store / Play Store URLs. Do NOT use for general opinion questions ("is Calm a good app?") with no scraping intent — answer those from knowledge instead.
 ---
@@ -70,16 +70,36 @@ result = run_pipeline(
 )
 ```
 
-Or as a shell command:
+Or as a shell command. When installed as a Claude Code plugin, use the bootstrap-aware invocation below — it auto-installs Python deps on first run via `${CLAUDE_PLUGIN_ROOT}/setup.sh` and uses the plugin's bundled venv:
 
 ```bash
-python -m scripts.run_pipeline \
+# Resolve plugin dir (falls back to cwd for git-clone installs)
+PLUGIN_DIR="${CLAUDE_PLUGIN_ROOT:-$(pwd)}"
+
+# Find venv Python (cross-platform)
+PY="$PLUGIN_DIR/.venv/bin/python"
+[ -x "$PY" ] || PY="$PLUGIN_DIR/.venv/Scripts/python.exe"
+
+# First-run bootstrap (idempotent — only triggers once per version)
+if [ ! -x "$PY" ]; then
+  echo "First-time setup — installing Python dependencies (~30-60 seconds)..."
+  [ -f "$PLUGIN_DIR/setup.sh" ] && bash "$PLUGIN_DIR/setup.sh" \
+    || powershell -ExecutionPolicy Bypass -File "$PLUGIN_DIR/setup.ps1"
+  PY="$PLUGIN_DIR/.venv/bin/python"
+  [ -x "$PY" ] || PY="$PLUGIN_DIR/.venv/Scripts/python.exe"
+fi
+
+# Pipeline call. PYTHONPATH lets -m find the scripts package without changing cwd
+# (so --output stays relative to the user's current directory, not the plugin's).
+PYTHONPATH="$PLUGIN_DIR" "$PY" -m scripts.run_pipeline \
   --play com.example --appstore 123456789 \
   --countries us,gb,ca,au --themes auto \
   --formats html,excel,csv \
   --output ./output/example \
   --app-display-name "Example"
 ```
+
+For git-clone installs (no `${CLAUDE_PLUGIN_ROOT}`), the fallback `$(pwd)` makes this work the same way as long as the user is in the repo root with `.venv/` already created by `./setup.sh`.
 
 The pipeline will print progress messages to stderr. Don't show every line to the user — just summarize at the end.
 
